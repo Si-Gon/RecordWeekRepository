@@ -14,6 +14,28 @@ y el versionado es [Semántico](https://semver.org/lang/es/): `MAYOR.MENOR.PARCH
 
 ---
 
+## [1.2] — 2026-06-30
+
+`versionCode 3`
+
+### Cambiado
+- **Limpieza interna de código muerto** (sin cambios visibles para el usuario). Se
+  eliminó la cadena `WeeklyAnalysis` completa (entidad, DAO, métodos en repositorio
+  y ViewModel), que quedó obsoleta cuando Análisis pasó a leer directo del historial
+  de completaciones. También se retiraron métodos y consultas sin uso en `DateUtils`,
+  `DailyCompletionDao` y `TaskRepository`, el worker obsoleto `WeeklyResetWorker`, y
+  colores duplicados/sin uso (`accent_purple`, `accent_amber_translucent`).
+
+### Notas técnicas
+- **Migración de base de datos 2 → 3.** Al quitar la tabla `weekly_analysis`, el
+  esquema de Room cambió. Se escribió una `Migration(2, 3)` con `DROP TABLE
+  weekly_analysis` que conserva las tareas y el historial existentes. Se reemplazó
+  `fallbackToDestructiveMigration()` por `addMigrations(...)`: a partir de ahora cada
+  cambio de esquema exige una migración explícita, evitando borrados de datos por
+  accidente.
+
+---
+
 ## [1.1] — 2026-06-29
 
 `versionCode 2`

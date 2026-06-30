@@ -8,7 +8,6 @@ import androidx.lifecycle.MutableLiveData;
 import com.recordweek.data.AnalyticsData;
 import com.recordweek.data.DailyCompletion;
 import com.recordweek.data.Task;
-import com.recordweek.data.WeeklyAnalysis;
 import com.recordweek.repository.TaskRepository;
 import java.util.List;
 
@@ -17,7 +16,6 @@ public class TaskViewModel extends AndroidViewModel {
     private final LiveData<List<Task>> allTasks;
     private final MutableLiveData<Integer> selectedDay = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
-    private final MutableLiveData<List<WeeklyAnalysis>> weeklyAnalysisList = new MutableLiveData<>();
     private final MutableLiveData<AnalyticsData> analyticsData = new MutableLiveData<>();
 
     public TaskViewModel(@NonNull Application application) {
@@ -43,15 +41,6 @@ public class TaskViewModel extends AndroidViewModel {
 
     public LiveData<DailyCompletion> getCompletionLive(int taskId, String date) { return repository.getCompletionLive(taskId, date); }
     public LiveData<List<DailyCompletion>> getCompletionsByDate(String date) { return repository.getCompletionsByDate(date); }
-    public LiveData<List<WeeklyAnalysis>> getWeeklyAnalysisList() { return weeklyAnalysisList; }
-
-    public void loadAnalysisByYear(int year) {
-        isLoading.setValue(true);
-        repository.getAnalysisByYear(year, list -> {
-            weeklyAnalysisList.postValue(list);
-            isLoading.postValue(false);
-        });
-    }
 
     // Analytics nuevo: dispara el calculo en el repository (hilo de fondo) y publica
     // el resultado en un LiveData que la Activity observa. postValue porque venimos
@@ -82,7 +71,6 @@ public class TaskViewModel extends AndroidViewModel {
         repository.importDataFromJson(json, callback);
     }
 
-    public void insertAnalysis(WeeklyAnalysis analysis) { repository.insertAnalysis(analysis); }
     public MutableLiveData<Integer> getSelectedDay() { return selectedDay; }
     public void setSelectedDay(int day) { selectedDay.setValue(day); }
     public LiveData<Boolean> getIsLoading() { return isLoading; }

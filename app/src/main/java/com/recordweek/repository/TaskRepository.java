@@ -8,8 +8,6 @@ import com.recordweek.data.DailyCompletion;
 import com.recordweek.data.DailyCompletionDao;
 import com.recordweek.data.Task;
 import com.recordweek.data.TaskDao;
-import com.recordweek.data.WeeklyAnalysis;
-import com.recordweek.data.WeeklyAnalysisDao;
 import com.recordweek.utils.DateUtils;
 import org.json.JSONArray;
 import java.text.SimpleDateFormat;
@@ -26,7 +24,6 @@ import java.util.concurrent.Executors;
 public class TaskRepository {
     private final TaskDao taskDao;
     private final DailyCompletionDao completionDao;
-    private final WeeklyAnalysisDao analysisDao;
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
     private final LiveData<List<Task>> allTasks;
     private final LiveData<List<Task>> activeTasks;
@@ -35,7 +32,6 @@ public class TaskRepository {
         AppDatabase db = AppDatabase.getInstance(application);
         taskDao = db.taskDao();
         completionDao = db.dailyCompletionDao();
-        analysisDao = db.weeklyAnalysisDao();
         allTasks = taskDao.getAllTasks();
         activeTasks = taskDao.getActiveTasks();
     }
@@ -61,8 +57,6 @@ public class TaskRepository {
         });
     }
 
-    public List<Task> getActiveTasksSync() { return taskDao.getActiveTasksSync(); }
-
     public void upsertCompletion(DailyCompletion completion) {
         executor.execute(() -> completionDao.insert(completion));
     }
@@ -75,35 +69,7 @@ public class TaskRepository {
         return completionDao.getCompletionsByDate(date);
     }
 
-    public void countCompletedDays(int taskId, String startDate, String endDate, OnCountCallback callback) {
-        executor.execute(() -> {
-            int count = completionDao.countCompletedDays(taskId, startDate, endDate);
-            if (callback != null) callback.onCount(count);
-        });
-    }
-
     public void deleteAllCompletions() { executor.execute(completionDao::deleteAll); }
-
-    public void insertAnalysis(WeeklyAnalysis analysis) {
-        executor.execute(() -> {
-            int exists = analysisDao.existsEntry(analysis.taskId, analysis.weekNumber, analysis.year);
-            if (exists == 0) analysisDao.insert(analysis);
-        });
-    }
-
-    public void getAnalysisByYear(int year, OnAnalysisLoadedCallback callback) {
-        executor.execute(() -> {
-            List<WeeklyAnalysis> list = analysisDao.getByYearForAnalysis(year);
-            if (callback != null) callback.onLoaded(list);
-        });
-    }
-
-    public void getAnalysisByTask(int taskId, OnAnalysisLoadedCallback callback) {
-        executor.execute(() -> {
-            List<WeeklyAnalysis> list = analysisDao.getByTaskDescending(taskId);
-            if (callback != null) callback.onLoaded(list);
-        });
-    }
 
     // ============================================================
     //  ANALYTICS: calcula todas las metricas de una sola pasada
@@ -369,7 +335,5 @@ public class TaskRepository {
     public interface OnExportReadyCallback { void onReady(String json); }
     public interface OnTaskInsertedCallback { void onInserted(Task task); }
     public interface OnTaskLoadedCallback { void onLoaded(Task task); }
-    public interface OnCountCallback { void onCount(int count); }
-    public interface OnAnalysisLoadedCallback { void onLoaded(List<WeeklyAnalysis> analysisList); }
     public interface OnAnalyticsLoadedCallback { void onLoaded(AnalyticsData data); }
 }

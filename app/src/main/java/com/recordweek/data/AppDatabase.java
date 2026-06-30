@@ -1,20 +1,44 @@
 package com.recordweek.data;
 
 import android.content.Context;
+import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 @Database(
-    entities = {Task.class, DailyCompletion.class, WeeklyAnalysis.class},
-    version = 2,
+    entities = {Task.class, DailyCompletion.class},
+    version = 3,
     exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
     private static volatile AppDatabase INSTANCE;
     public abstract TaskDao taskDao();
     public abstract DailyCompletionDao dailyCompletionDao();
-    public abstract WeeklyAnalysisDao weeklyAnalysisDao();
+
+    // ============================================================
+    //  MIGRACION 2 -> 3: se elimino la tabla weekly_analysis.
+    //  Antes guardaba un resumen semanal por tarea; quedo obsoleta
+    //  cuando Analytics paso a leer directo de daily_completions.
+    //
+    //  Room compara el esquema que ESPERA (deducido de las @Entity)
+    //  contra el esquema GRABADO en el archivo SQLite del telefono.
+    //  Al quitar la entidad, esos dos dejan de cuadrar; esta migracion
+    //  es la instruccion exacta que cierra esa diferencia: borra solo
+    //  la tabla sobrante y CONSERVA tasks y daily_completions.
+    //
+    //  Por que un Migration y no migracion destructiva: la destructiva
+    //  borraria TODA la base (perderias tareas e historial). Esto solo
+    //  toca la tabla que sobra.
+    // ============================================================
+    static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("DROP TABLE IF EXISTS weekly_analysis");
+        }
+    };
 
     public static AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
@@ -25,7 +49,12 @@ public abstract class AppDatabase extends RoomDatabase {
                             AppDatabase.class,
                             "recordweek_database"
                         )
-                        .fallbackToDestructiveMigration()
+                        // Registramos la migracion explicita. Quitamos
+                        // fallbackToDestructiveMigration: ya no queremos la red
+                        // que borra todo en silencio; preferimos que la app
+                        // exija una migracion bien escrita ante cada cambio de
+                        // esquema (asi no se pierden datos por accidente).
+                        .addMigrations(MIGRATION_2_3)
                         .build();
                 }
             }

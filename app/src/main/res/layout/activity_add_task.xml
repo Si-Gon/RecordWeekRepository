@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Nombre de la tarea"
-            app:hintTextColor="@color/accent_purple"
+            app:hintTextColor="@color/accent_amber"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_task_name"
@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:hint="Descripcion (opcional)"
-            app:hintTextColor="@color/accent_purple"
+            app:hintTextColor="@color/accent_amber"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_task_description"

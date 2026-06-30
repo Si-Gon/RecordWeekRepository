@@ -11,10 +11,8 @@
     <color name="text_secondary">#5B6B8C</color>
 
     <!-- Acento principal: ambar oscuro -->
-    <color name="accent_purple">#E0922F</color>
     <color name="accent_amber">#E0922F</color>
     <color name="accent_amber_dark">#241400</color>
-    <color name="accent_amber_translucent">#33E0922F</color>
 
     <!-- Colores de categoria para las tareas -->
     <color name="task_red">#EF5350</color>

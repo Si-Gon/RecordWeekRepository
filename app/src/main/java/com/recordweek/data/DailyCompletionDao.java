@@ -12,19 +12,13 @@ public interface DailyCompletionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(DailyCompletion completion);
     @Query("SELECT * FROM daily_completions WHERE task_id = :taskId AND date = :date LIMIT 1")
-    DailyCompletion getCompletion(int taskId, String date);
-    @Query("SELECT * FROM daily_completions WHERE task_id = :taskId AND date = :date LIMIT 1")
     LiveData<DailyCompletion> getCompletionLive(int taskId, String date);
     @Query("SELECT COUNT(*) FROM daily_completions WHERE task_id = :taskId AND date >= :startDate AND date <= :endDate AND completed = 1")
     int countCompletedDays(int taskId, String startDate, String endDate);
     @Query("DELETE FROM daily_completions")
     void deleteAll();
-    @Query("DELETE FROM daily_completions WHERE date >= :startDate AND date <= :endDate")
-    void deleteByDateRange(String startDate, String endDate);
     @Query("SELECT * FROM daily_completions WHERE date = :date")
     LiveData<List<DailyCompletion>> getCompletionsByDate(String date);
-    @Query("SELECT COUNT(*) FROM daily_completions WHERE task_id = :taskId AND date >= :startDate AND date <= :endDate AND completed = 1")
-    int getCompletedCountForTask(int taskId, String startDate, String endDate);
 
     // --- Queries para Analytics (lectura directa del historial) ---
 
