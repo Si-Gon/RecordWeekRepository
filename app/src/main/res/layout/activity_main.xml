@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface_dark"
+        app:elevation="4dp">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/surface_dark"
+            app:titleTextColor="@color/text_primary"/>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:background="@color/surface_dark"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:gravity="center_vertical">
+
+            <Button android:id="@+id/btn_mon" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="L" android:textSize="12sp" android:padding="4dp" android:background="@drawable/bg_day_normal" android:textColor="@color/text_primary" android:layout_marginEnd="2dp"/>
+            <Button android:id="@+id/btn_tue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="M" android:textSize="12sp" android:padding="4dp" android:background="@drawable/bg_day_normal" android:textColor="@color/text_primary" android:layout_marginEnd="2dp"/>
+            <Button android:id="@+id/btn_wed" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="X" android:textSize="12sp" android:padding="4dp" android:background="@drawable/bg_day_normal" android:textColor="@color/text_primary" android:layout_marginEnd="2dp"/>
+            <Button android:id="@+id/btn_thu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="J" android:textSize="12sp" android:padding="4dp" android:background="@drawable/bg_day_normal" android:textColor="@color/text_primary" android:layout_marginEnd="2dp"/>
+            <Button android:id="@+id/btn_fri" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="V" android:textSize="12sp" android:padding="4dp" android:background="@drawable/bg_day_normal" android:textColor="@color/text_primary" android:layout_marginEnd="2dp"/>
+            <Button android:id="@+id/btn_sat" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="S" android:textSize="12sp" android:padding="4dp" android:background="@drawable/bg_day_normal" android:textColor="@color/text_primary" android:layout_marginEnd="2dp"/>
+            <Button android:id="@+id/btn_sun" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="D" android:textSize="12sp" android:padding="4dp" android:background="@drawable/bg_day_normal" android:textColor="@color/text_primary"/>
+
+        </LinearLayout>
+
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2A2A2A"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_tasks"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:paddingTop="8dp"
+            android:paddingBottom="80dp"
+            android:clipToPadding="false"
+            android:scrollbars="none"/>
+
+    </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add_task"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:contentDescription="Añadir tarea"
+        app:srcCompat="@drawable/ic_add"
+        app:backgroundTint="@color/accent_amber"
+        app:tint="@color/accent_amber_dark"/>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

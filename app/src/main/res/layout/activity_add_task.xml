@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nombre de la tarea"
+            app:hintTextColor="@color/accent_purple"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_task_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:maxLines="1"
+                android:textColor="@color/text_primary"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="Descripcion (opcional)"
+            app:hintTextColor="@color/accent_purple"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_task_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine"
+                android:minLines="2"
+                android:maxLines="4"
+                android:textColor="@color/text_primary"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Categoria"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <Spinner
+                android:id="@+id/spinner_category"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_spinner"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:spinnerMode="dropdown"
+                android:popupBackground="@color/surface_dark"/>
+
+            <!-- Punto que muestra el color que esta categoria tendra (se tinta por codigo) -->
+            <View
+                android:id="@+id/view_category_color"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_category_dot"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Dias de la semana"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+            <Button android:id="@+id/btn_day_mon" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="L" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
+            <Button android:id="@+id/btn_day_tue" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="M" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
+            <Button android:id="@+id/btn_day_wed" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="X" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
+            <Button android:id="@+id/btn_day_thu" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="J" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
+            <Button android:id="@+id/btn_day_fri" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="V" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
+            <Button android:id="@+id/btn_day_sat" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="S" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
+            <Button android:id="@+id/btn_day_sun" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="D" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Hora de notificacion"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"/>
+
+        <TextView
+            android:id="@+id/tv_selected_time"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/bg_spinner"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="08:00"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Tarea activa"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"/>
+            <Switch
+                android:id="@+id/switch_active"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:thumbTint="@color/accent_amber"
+                android:trackTint="@color/surface_elevated"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_save_task"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="16dp"
+            android:text="Guardar tarea"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/accent_amber_dark"
+            android:backgroundTint="@color/accent_amber"/>
+
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Icono de recordWeek (primer plano del adaptive-icon).
+  Lienzo 108x108; la "zona segura" visible es el circulo central (~radio 33).
+  Diseno: anillo de progreso ambar que ARRANCA solido arriba (punto de inicio
+  de la semana) y se DESVANECE girando en sentido horario, como una estela que
+  marca el paso de la semana. En el centro, una R pequena en ambar solido.
+
+  El desvanecimiento se logra con strokeAlpha decreciente por segmento, porque
+  Vector Drawable NO soporta degradados a lo largo de una curva. Cada tramo es
+  un <path> independiente con su propia opacidad.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+
+    <!-- Anillo base muy tenue (riel oscuro) para dar cuerpo al circulo completo -->
+    <path
+        android:strokeColor="#241400"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M54,24 A30,30 0 1,1 53.9,24"/>
+
+    <!-- Estela ambar: 12 segmentos, de solido (arriba) a casi transparente -->
+    <path android:strokeColor="#E0922F" android:strokeWidth="6" android:strokeLineCap="butt" android:strokeAlpha="1.00" android:fillColor="#00000000" android:pathData="M54.00,24.00 A30,30 0 0,1 69.00,28.02"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="6" android:strokeLineCap="butt" android:strokeAlpha="0.92" android:fillColor="#00000000" android:pathData="M69.00,28.02 A30,30 0 0,1 79.98,39.00"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="6" android:strokeLineCap="butt" android:strokeAlpha="0.84" android:fillColor="#00000000" android:pathData="M79.98,39.00 A30,30 0 0,1 84.00,54.00"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="6" android:strokeLineCap="butt" android:strokeAlpha="0.76" android:fillColor="#00000000" android:pathData="M84.00,54.00 A30,30 0 0,1 79.98,69.00"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="6" android:strokeLineCap="butt" android:strokeAlpha="0.68" android:fillColor="#00000000" android:pathData="M79.98,69.00 A30,30 0 0,1 69.00,79.98"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="6" android:strokeLineCap="butt" android:strokeAlpha="0.60" android:fillColor="#00000000" android:pathData="M69.00,79.98 A30,30 0 0,1 54.00,84.00"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="6" android:strokeLineCap="butt" android:strokeAlpha="0.52" android:fillColor="#00000000" android:pathData="M54.00,84.00 A30,30 0 0,1 39.00,79.98"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="6" android:strokeLineCap="butt" android:strokeAlpha="0.44" android:fillColor="#00000000" android:pathData="M39.00,79.98 A30,30 0 0,1 28.02,69.00"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="6" android:strokeLineCap="butt" android:strokeAlpha="0.36" android:fillColor="#00000000" android:pathData="M28.02,69.00 A30,30 0 0,1 24.00,54.00"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="6" android:strokeLineCap="butt" android:strokeAlpha="0.28" android:fillColor="#00000000" android:pathData="M24.00,54.00 A30,30 0 0,1 28.02,39.00"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="6" android:strokeLineCap="butt" android:strokeAlpha="0.20" android:fillColor="#00000000" android:pathData="M28.02,39.00 A30,30 0 0,1 39.00,28.02"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="6" android:strokeLineCap="butt" android:strokeAlpha="0.12" android:fillColor="#00000000" android:pathData="M39.00,28.02 A30,30 0 0,1 54.00,24.00"/>
+
+    <!-- Punto de inicio (arriba, las 12): marca donde arranca la semana -->
+    <path
+        android:fillColor="#E0922F"
+        android:pathData="M54,24 m-4.5,0 a4.5,4.5 0 1,0 9,0 a4.5,4.5 0 1,0 -9,0"/>
+
+    <!-- Letra R (serif sencilla), centrada, pequena respecto al anillo.
+         Caja aprox. x:44..64, y:40..68. Trazo del asta + bucle + pierna.
+         fillType="evenOdd": el segundo sub-path (el hueco del bucle) RESTA en
+         vez de sumar, asi la R queda con su agujerito en vez de rellena. -->
+    <path
+        android:fillColor="#E0922F"
+        android:fillType="evenOdd"
+        android:pathData="M46,40
+            L56,40
+            C61,40 64.5,43 64.5,48
+            C64.5,51.8 62.3,54.6 58.8,55.6
+            L65,68
+            L59.6,68
+            L54,56.4
+            L51,56.4
+            L51,68
+            L46,68
+            Z
+            M51,44
+            L51,52.6
+            L55.6,52.6
+            C58.2,52.6 59.5,51 59.5,48.3
+            C59.5,45.6 58.2,44 55.6,44
+            Z"/>
+</vector>

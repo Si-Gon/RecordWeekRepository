@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Punto circular que indica el color asignado a la categoria seleccionada.
+  El color de relleno se fija por codigo con setColorFilter / setTint, asi que
+  aqui solo definimos la forma (un circulo) y un color base que sera reemplazado.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/task_purple"/>
+    <size android:width="18dp" android:height="18dp"/>
+</shape>

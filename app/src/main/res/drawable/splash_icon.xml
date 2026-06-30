@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Icono para la pantalla de bienvenida (splash). Es el MISMO diseno del launcher
+  (anillo de progreso ambar que arranca arriba y se desvanece + R central), pero
+  dibujado en un lienzo de 240x240 y centrado en (120,120) con margen, porque el
+  sistema de splash recorta el icono en un circulo y le pone su propio padding.
+  Si reusaramos el icono del launcher (108dp lleno), el anillo quedaria pegado al
+  borde del circulo. Aqui el anillo (radio 44) deja aire de sobra.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="240dp" android:height="240dp"
+    android:viewportWidth="240" android:viewportHeight="240">
+
+    <!-- Riel oscuro tenue (circulo completo) -->
+    <path
+        android:strokeColor="#241400"
+        android:strokeWidth="9"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M120,76 A44,44 0 1,1 119.9,76"/>
+
+    <!-- Estela ambar: 12 segmentos de solido (arriba) a tenue -->
+    <path android:strokeColor="#E0922F" android:strokeWidth="9" android:strokeLineCap="butt" android:strokeAlpha="1.00" android:fillColor="#00000000" android:pathData="M120.00,76.00 A44,44 0 0,1 142.00,81.89"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="9" android:strokeLineCap="butt" android:strokeAlpha="0.93" android:fillColor="#00000000" android:pathData="M142.00,81.89 A44,44 0 0,1 158.11,98.00"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="9" android:strokeLineCap="butt" android:strokeAlpha="0.85" android:fillColor="#00000000" android:pathData="M158.11,98.00 A44,44 0 0,1 164.00,120.00"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="9" android:strokeLineCap="butt" android:strokeAlpha="0.78" android:fillColor="#00000000" android:pathData="M164.00,120.00 A44,44 0 0,1 158.11,142.00"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="9" android:strokeLineCap="butt" android:strokeAlpha="0.71" android:fillColor="#00000000" android:pathData="M158.11,142.00 A44,44 0 0,1 142.00,158.11"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="9" android:strokeLineCap="butt" android:strokeAlpha="0.63" android:fillColor="#00000000" android:pathData="M142.00,158.11 A44,44 0 0,1 120.00,164.00"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="9" android:strokeLineCap="butt" android:strokeAlpha="0.56" android:fillColor="#00000000" android:pathData="M120.00,164.00 A44,44 0 0,1 98.00,158.11"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="9" android:strokeLineCap="butt" android:strokeAlpha="0.49" android:fillColor="#00000000" android:pathData="M98.00,158.11 A44,44 0 0,1 81.89,142.00"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="9" android:strokeLineCap="butt" android:strokeAlpha="0.41" android:fillColor="#00000000" android:pathData="M81.89,142.00 A44,44 0 0,1 76.00,120.00"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="9" android:strokeLineCap="butt" android:strokeAlpha="0.34" android:fillColor="#00000000" android:pathData="M76.00,120.00 A44,44 0 0,1 81.89,98.00"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="9" android:strokeLineCap="butt" android:strokeAlpha="0.27" android:fillColor="#00000000" android:pathData="M81.89,98.00 A44,44 0 0,1 98.00,81.89"/>
+    <path android:strokeColor="#E0922F" android:strokeWidth="9" android:strokeLineCap="butt" android:strokeAlpha="0.19" android:fillColor="#00000000" android:pathData="M98.00,81.89 A44,44 0 0,1 120.00,76.00"/>
+
+    <!-- Punto de inicio (arriba) -->
+    <path
+        android:fillColor="#E0922F"
+        android:pathData="M120,76 m-6.5,0 a6.5,6.5 0 1,0 13,0 a6.5,6.5 0 1,0 -13,0"/>
+
+    <!-- Letra R central (mismo trazo del launcher, escalado y centrado) -->
+    <path
+        android:fillColor="#E0922F"
+        android:fillType="evenOdd"
+        android:pathData="M108.3,99.5 L122.9,99.5 C130.3,99.5 135.4,103.9 135.4,111.2 C135.4,116.8 132.2,120.9 127.0,122.3 L136.1,140.5 L128.2,140.5 L120.0,123.5 L115.6,123.5 L115.6,140.5 L108.3,140.5 Z M115.6,105.3 L115.6,117.9 L122.3,117.9 C126.2,117.9 128.1,115.6 128.1,111.6 C128.1,107.7 126.2,105.3 122.3,105.3 Z"/>
+</vector>

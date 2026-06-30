@@ -1,0 +1,4 @@
+﻿-keep class com.recordweek.data.** { *; }
+-keep class com.github.mikephil.charting.** { *; }
+-keep class androidx.work.** { *; }
+-keep class androidx.lifecycle.** { *; }

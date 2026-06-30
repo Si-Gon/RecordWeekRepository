@@ -1,0 +1,38 @@
+# ============================================================
+#  .gitignore para proyecto Android (Record Week)
+#  Ignora todo lo que se regenera en cada build, es personal
+#  de tu maquina, o nunca debe salir del equipo (claves).
+# ============================================================
+
+# --- Compilados / salidas de build (se regeneran solos) ---
+.gradle/
+build/
+app/build/
+*/build/
+
+# --- Configuracion local de tu maquina (NO portable) ---
+# Contiene la ruta del SDK de Android de tu equipo.
+local.properties
+
+# --- Android Studio / IntelliJ ---
+.idea/
+*.iml
+.DS_Store
+captures/
+
+# --- APKs y otros artefactos generados ---
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# --- CLAVES DE FIRMA: NUNCA a git ---
+# Quien tenga esto puede firmar apps haciendose pasar por ti.
+*.jks
+*.keystore
+keystore.properties
+
+# --- Logs y temporales ---
+*.log
+.cxx/

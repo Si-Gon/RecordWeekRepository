@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Define que carpetas internas de la app puede exponer el FileProvider para
+     compartir archivos con otras apps (correo, Drive, etc.). Compartimos la
+     carpeta cache, donde escribiremos el .json del respaldo antes de enviarlo. -->
+<paths>
+    <cache-path name="backups" path="." />
+</paths>
