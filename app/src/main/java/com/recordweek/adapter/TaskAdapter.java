@@ -78,7 +78,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     }
 
     class TaskViewHolder extends RecyclerView.ViewHolder {
-        private final View colorBar;
         private final View layoutSubtitle;
         private final TextView taskName, taskCategory, taskTime, taskDescription;
         private final CheckBox checkBoxCompleted;
@@ -87,7 +86,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
         public TaskViewHolder(@NonNull View itemView) {
             super(itemView);
-            colorBar = itemView.findViewById(R.id.view_color_bar);
             layoutSubtitle = itemView.findViewById(R.id.layout_subtitle);
             taskName = itemView.findViewById(R.id.tv_task_name);
             taskCategory = itemView.findViewById(R.id.tv_task_category);
@@ -102,7 +100,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             taskName.setText(task.name);
             taskCategory.setText(task.category);
             taskTime.setText(String.format("%02d:%02d", task.notificationHour, task.notificationMinute));
-            colorBar.setBackgroundColor(resolveTaskColor(task.color));
+            // Fondo de la tarjeta (tarjeta redondeada + degradado + acento) segun categoria.
+            itemView.setBackground(buildCardBackground(resolveTaskColor(task.color)));
             applyExpandedState(task);
             // Estado real de la marca para ESTE dia (lo usamos tambien para revertir
             // si el usuario toca un checkbox bloqueado).
@@ -159,6 +158,55 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             } else {
                 taskDescription.setVisibility(View.GONE);
             }
+        }
+
+        // Construye el fondo de la tarjeta en tiempo de ejecucion (no se puede en XML
+        // porque el color depende de la categoria). Es un LayerDrawable de dos capas:
+        //   Capa 0 (tarjeta): rectangulo redondeado con degradado horizontal que va del
+        //     color de la categoria muy diluido (10%) hacia la superficie, mas un borde
+        //     tenue. Da el "cuerpo" de la tarjeta y el tinte suave de fondo.
+        //   Capa 1 (acento): franja de 4dp del color pleno de la categoria, con las
+        //     esquinas izquierdas redondeadas, anclada al borde izquierdo.
+        // Se crea una instancia nueva por bind: los Drawables de fondo no deben
+        // compartirse entre varias vistas visibles (comparten bounds y se pisan).
+        private android.graphics.drawable.Drawable buildCardBackground(int accentColor) {
+            float density = itemView.getResources().getDisplayMetrics().density;
+            float corner = 12 * density;
+            int stroke = Math.round(1 * density);
+            int accentWidth = Math.round(4 * density);
+
+            int surface = Color.parseColor("#121A2E"); // surface_elevated
+            // Mezcla 8% color de categoria + 92% superficie. Punto medio: 10% apagaba el
+            // texto secundario (categoria/hora/descripcion) y 6% casi no se percibia el
+            // degradado; 8% deja ver el tinte sin restar legibilidad. El degradado de 3
+            // paradas ya lo confina al tercio izquierdo, lejos del grueso del texto.
+            int tint = androidx.core.graphics.ColorUtils.blendARGB(surface, accentColor, 0.08f);
+
+            // 3 paradas {tinte, superficie, superficie}: el tinte se concentra en el
+            // tercio izquierdo (donde esta el acento) y la superficie plana ocupa el
+            // resto, dejando el texto sobre fondo limpio.
+            android.graphics.drawable.GradientDrawable card =
+                new android.graphics.drawable.GradientDrawable(
+                    android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                    new int[]{ tint, surface, surface });
+            card.setCornerRadius(corner);
+            card.setStroke(stroke, Color.parseColor("#232C40")); // borde tenue
+
+            android.graphics.drawable.GradientDrawable accent =
+                new android.graphics.drawable.GradientDrawable();
+            accent.setColor(accentColor);
+            // Radios por esquina: [supIzq, supDer, infDer, infIzq] (x,y cada uno).
+            // Solo redondeamos las dos izquierdas para que encaje en la esquina de la tarjeta.
+            accent.setCornerRadii(new float[]{ corner, corner, 0, 0, 0, 0, corner, corner });
+
+            android.graphics.drawable.LayerDrawable layers =
+                new android.graphics.drawable.LayerDrawable(
+                    new android.graphics.drawable.Drawable[]{ card, accent });
+            // setLayerWidth/Gravity: API 23+ (minSdk 29, ok). Fijan el ancho del acento
+            // a 4dp y lo pegan a la izquierda sin necesitar el ancho total de la tarjeta.
+            layers.setLayerWidth(1, accentWidth);
+            layers.setLayerGravity(1, android.view.Gravity.START);
+            return layers;
         }
 
         private int resolveTaskColor(String colorName) {

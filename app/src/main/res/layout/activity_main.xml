@@ -6,24 +6,16 @@
     android:layout_height="match_parent"
     android:background="@color/bg_dark">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/surface_dark"
-        app:elevation="4dp">
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/surface_dark"
-            app:titleTextColor="@color/text_primary"/>
-    </com.google.android.material.appbar.AppBarLayout>
+    <!-- La barra superior (titulo + Analisis + Ajustes) la aporta el TEMA
+         (Theme.Material3.Dark tiene ActionBar) y se rellena en MainActivity con
+         getSupportActionBar(). Antes habia aqui un AppBarLayout + Toolbar que no
+         se conectaba a nada (ningun setSupportActionBar): se dibujaba vacio y era
+         la franja oscura entre el titulo y los dias. Eliminado. -->
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"

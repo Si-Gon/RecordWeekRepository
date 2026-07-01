@@ -163,7 +163,7 @@ public class TaskRepository {
     // Calcula racha actual y mejor racha a partir de las fechas (desc) con actividad.
     // Racha actual: dias consecutivos terminando en hoy o ayer (si aun no marcas hoy,
     // la racha de ayer sigue "viva"). Mejor racha: el tramo consecutivo mas largo.
-    private void computeStreaks(List<String> datesDesc, AnalyticsData data) {
+    static void computeStreaks(List<String> datesDesc, AnalyticsData data) {
         if (datesDesc == null || datesDesc.isEmpty()) {
             data.currentStreak = 0;
             data.bestStreak = 0;
@@ -209,7 +209,10 @@ public class TaskRepository {
         data.bestStreak = Math.max(best, current);
     }
 
-    private boolean sameDay(Calendar a, Calendar b) {
+    // ponytail: static y package-private (no privadas) para poder probarlas desde
+    // StreakTest sin construir el Repository entero (que abriria la BD). No usan
+    // estado de instancia, asi que static es correcto ademas de testeable.
+    static boolean sameDay(Calendar a, Calendar b) {
         return a.get(Calendar.YEAR) == b.get(Calendar.YEAR)
             && a.get(Calendar.DAY_OF_YEAR) == b.get(Calendar.DAY_OF_YEAR);
     }

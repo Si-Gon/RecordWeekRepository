@@ -1,115 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Tarjeta de tarea (opcion C). El fondo (tarjeta redondeada + degradado del color
+     de la categoria + acento izquierdo) NO se define aqui: se dibuja en tiempo de
+     ejecucion en TaskAdapter, porque el color depende de la categoria de cada tarea.
+     Aqui solo definimos la estructura: margenes, padding y los textos/controles. -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/task_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@color/bg_dark"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:layout_marginStart="12dp"
+    android:layout_marginEnd="12dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="6dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp"
     android:paddingStart="16dp"
-    android:paddingEnd="16dp">
+    android:paddingEnd="10dp">
 
+    <!-- Cuerpo: nombre + subtitulo (categoria / hora) + descripcion. El paddingStart
+         de 16dp del contenedor deja libre el acento de 4dp que dibuja el fondo. -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingTop="11dp"
-        android:paddingBottom="11dp">
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingEnd="8dp">
 
-        <View
-            android:id="@+id/view_color_bar"
-            android:layout_width="3dp"
-            android:layout_height="20dp"
-            android:background="@color/accent_amber"/>
+        <TextView
+            android:id="@+id/tv_task_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:maxLines="1"
+            android:ellipsize="end"/>
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:id="@+id/layout_subtitle"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:paddingStart="12dp"
-            android:paddingEnd="8dp">
+            android:orientation="horizontal"
+            android:layout_marginTop="5dp"
+            android:visibility="gone">
 
             <TextView
-                android:id="@+id/tv_task_name"
-                android:layout_width="match_parent"
+                android:id="@+id/tv_task_category"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp"
-                android:maxLines="1"
-                android:ellipsize="end"/>
-
-            <LinearLayout
-                android:id="@+id/layout_subtitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="5dp"
-                android:visibility="gone">
-
-                <TextView
-                    android:id="@+id/tv_task_category"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="11.5sp"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="  ·  "
-                    android:textColor="@color/text_secondary"
-                    android:textSize="11.5sp"/>
-
-                <TextView
-                    android:id="@+id/tv_task_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/accent_amber"
-                    android:textSize="11.5sp"/>
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/tv_task_description"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
                 android:textColor="@color/text_secondary"
-                android:textSize="12.5sp"
-                android:visibility="gone"
-                android:maxLines="5"/>
+                android:textSize="11.5sp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="  ·  "
+                android:textColor="@color/text_secondary"
+                android:textSize="11.5sp"/>
+
+            <TextView
+                android:id="@+id/tv_task_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/accent_amber"
+                android:textSize="11.5sp"/>
 
         </LinearLayout>
 
-        <CheckBox
-            android:id="@+id/checkbox_completed"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:layout_gravity="center_vertical"
-            android:button="@drawable/selector_check_circle"
-            android:background="@android:color/transparent"/>
-
-        <!-- Boton de tres puntos (overflow). Abre el menu Editar / Quitar de este
-             dia / Eliminar. Reemplaza el long-press oculto por una accion visible.
-             background transparente + padding para tener un area de toque comoda. -->
-        <ImageButton
-            android:id="@+id/btn_task_menu"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_gravity="center_vertical"
-            android:layout_marginStart="6dp"
-            android:src="@drawable/ic_more_vert"
-            android:background="@android:color/transparent"
-            android:scaleType="centerInside"
-            android:contentDescription="Opciones de la tarea"/>
+        <TextView
+            android:id="@+id/tv_task_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="12.5sp"
+            android:visibility="gone"
+            android:maxLines="5"/>
 
     </LinearLayout>
 
-    <View
-        android:id="@+id/view_divider"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/divider"/>
+    <CheckBox
+        android:id="@+id/checkbox_completed"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_gravity="center_vertical"
+        android:button="@drawable/selector_check_circle"
+        android:background="@android:color/transparent"/>
+
+    <!-- Boton de tres puntos (overflow). Abre el menu Editar / Quitar de este dia /
+         Eliminar. background transparente + area de toque comoda. -->
+    <ImageButton
+        android:id="@+id/btn_task_menu"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="6dp"
+        android:src="@drawable/ic_more_vert"
+        android:background="@android:color/transparent"
+        android:scaleType="centerInside"
+        android:contentDescription="Opciones de la tarea"/>
 
 </LinearLayout>

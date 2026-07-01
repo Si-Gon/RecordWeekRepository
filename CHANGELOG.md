@@ -14,6 +14,34 @@ y el versionado es [Semántico](https://semver.org/lang/es/): `MAYOR.MENOR.PARCH
 
 ---
 
+## [1.3] — 2026-06-30
+
+`versionCode 4`
+
+### Cambiado
+- **Rediseño de la lista de tareas a formato tarjeta.** Cada tarea pasa de una fila
+  separada por línea fina a una tarjeta con esquinas redondeadas, sobre un tono de
+  fondo levemente elevado (`surface_elevated`) con un degradado muy suave del color
+  de su categoría (8%) concentrado a la izquierda, borde tenue y una franja de acento
+  del color de la categoría en el borde izquierdo. Se quitó la barra de color de 3dp
+  y la línea divisoria entre filas.
+
+### Corregido
+- **Barra superior vacía entre el título y el contenido.** En las pantallas Principal,
+  Análisis y Configuración aparecía una franja oscura sin uso: un `AppBarLayout` +
+  `Toolbar` en el layout que no se conectaba a nada (ningún `setSupportActionBar`), así
+  que se dibujaba vacío. La barra superior real (título y botón atrás) la aporta la
+  ActionBar del tema, así que ese `Toolbar` fantasma se eliminó de las tres pantallas.
+
+### Notas técnicas
+- **Prueba unitaria de la lógica de rachas.** Se añadió `StreakTest` (JUnit 4, test
+  local en la JVM) para `computeStreaks`: cubre lista vacía, días consecutivos hasta
+  hoy, racha aún viva sin marcar hoy, y mejor racha en el pasado. Para poder probarla
+  sin abrir la base de datos, `computeStreaks` y `sameDay` pasaron de privadas a
+  `static` package-private. Nueva dependencia `testImplementation junit:junit:4.13.2`.
+
+---
+
 ## [1.2] — 2026-06-30
 
 `versionCode 3`

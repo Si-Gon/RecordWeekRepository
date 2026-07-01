@@ -7,17 +7,9 @@
     android:orientation="vertical"
     android:background="@color/bg_dark">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/surface_dark">
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/surface_dark"
-            app:titleTextColor="@color/text_primary"/>
-    </com.google.android.material.appbar.AppBarLayout>
+    <!-- El titulo "Configuracion" y el boton atras los pone la ActionBar del TEMA
+         desde SettingsActivity (getSupportActionBar). El AppBarLayout + Toolbar que
+         habia aqui no se conectaba a nada y se dibujaba vacio (franja oscura). Eliminado. -->
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
