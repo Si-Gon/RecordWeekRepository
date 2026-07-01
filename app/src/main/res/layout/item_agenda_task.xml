@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Una tarea en la AGENDA por hora de la vista mensual (SOLO CONSULTA: sin
+     checkbox, sin menu, no se puede editar ni marcar). Tres columnas:
+       [hora 46dp] [riel 16dp] [tarjeta 1fr]
+     El riel lleva una linea vertical central; al apilarse las filas la linea se
+     ve continua, y cada fila pone su "nodo" (circulo) encima: lleno = hecha,
+     hueco = pendiente. El fondo de la tarjeta se dibuja en codigo (mismo estilo
+     que la lista diaria) porque el color depende de la categoria. -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <!-- Columna 1: hora programada de la notificacion (HH:mm). nowrap para que no
+         se parta y no se solape con el riel (bug que ya corregimos en la maqueta). -->
+    <TextView
+        android:id="@+id/tv_agenda_hour"
+        android:layout_width="46dp"
+        android:layout_height="match_parent"
+        android:gravity="end|top"
+        android:paddingTop="14dp"
+        android:paddingEnd="6dp"
+        android:singleLine="true"
+        android:text="00:00"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"/>
+
+    <!-- Columna 2: el riel. La linea vertical (view fina, centrada) da continuidad;
+         el nodo (circulo) se dibuja en codigo segun hecha/pendiente y se centra. -->
+    <FrameLayout
+        android:layout_width="16dp"
+        android:layout_height="match_parent">
+
+        <View
+            android:layout_width="2dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            android:background="@color/divider"/>
+
+        <View
+            android:id="@+id/agenda_node"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:layout_gravity="center_horizontal|top"
+            android:layout_marginTop="15dp"/>
+    </FrameLayout>
+
+    <!-- Columna 3: la tarjeta (fondo puesto en codigo con buildCardBackground). -->
+    <LinearLayout
+        android:id="@+id/agenda_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginBottom="8dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="12dp">
+
+        <TextView
+            android:id="@+id/tv_agenda_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="Tarea"/>
+
+        <!-- Subtitulo: categoria · estado (hecha/pendiente). El estado es SOLO texto
+             de lectura; nunca un control interactivo. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="5dp">
+
+            <TextView
+                android:id="@+id/tv_agenda_category"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_secondary"
+                android:textSize="11.5sp"
+                android:text="Categoria"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="  ·  "
+                android:textColor="@color/text_secondary"
+                android:textSize="11.5sp"/>
+
+            <TextView
+                android:id="@+id/tv_agenda_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="11.5sp"
+                android:text="pendiente"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</LinearLayout>

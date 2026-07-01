@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Record Week</string>
+    <string name="menu_label">Menú</string>
+    <string name="menu_daily">Diario</string>
     <string name="menu_analytics">Analisis</string>
+    <string name="menu_monthly">Vista mensual</string>
     <string name="menu_settings">Configuracion</string>
 </resources>

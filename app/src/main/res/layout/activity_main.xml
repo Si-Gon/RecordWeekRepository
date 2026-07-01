@@ -1,66 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<!-- ============================================================
+     HOST de la app. Es el MARCO FIJO que nunca se destruye al cambiar de vista.
+       - fragment_container: el hueco central donde se intercambia el contenido
+         (Diario / Mensual / Analisis). Ocupa todo el alto disponible (weight=1).
+       - bottom_nav: la barra inferior fija con los 3 destinos principales.
+     La barra SUPERIOR (titulo + engranaje de Ajustes) la pone el TEMA
+     (Theme.Material3.Dark trae ActionBar) y se rellena por codigo en MainActivity.
+     ============================================================ -->
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="@color/bg_dark">
 
-    <!-- La barra superior (titulo + Analisis + Ajustes) la aporta el TEMA
-         (Theme.Material3.Dark tiene ActionBar) y se rellena en MainActivity con
-         getSupportActionBar(). Antes habia aqui un AppBarLayout + Toolbar que no
-         se conectaba a nada (ningun setSupportActionBar): se dibujaba vacio y era
-         la franja oscura entre el titulo y los dias. Eliminado. -->
-
-    <LinearLayout
+    <!-- Hueco del contenido. height=0 + weight=1 -> se estira para ocupar todo lo
+         que la barra inferior deja libre. Aqui dentro MainActivity coloca el
+         Fragment activo con FragmentManager.replace(). -->
+    <FrameLayout
+        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:orientation="horizontal"
-            android:background="@color/surface_dark"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:gravity="center_vertical">
+    <!-- Separador fino entre el contenido y la barra, para que la barra no quede
+         "pegada" visualmente al contenido sobre el fondo oscuro. -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider"/>
 
-            <Button android:id="@+id/btn_mon" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="L" android:textSize="12sp" android:padding="4dp" android:background="@drawable/bg_day_normal" android:textColor="@color/text_primary" android:layout_marginEnd="2dp"/>
-            <Button android:id="@+id/btn_tue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="M" android:textSize="12sp" android:padding="4dp" android:background="@drawable/bg_day_normal" android:textColor="@color/text_primary" android:layout_marginEnd="2dp"/>
-            <Button android:id="@+id/btn_wed" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="X" android:textSize="12sp" android:padding="4dp" android:background="@drawable/bg_day_normal" android:textColor="@color/text_primary" android:layout_marginEnd="2dp"/>
-            <Button android:id="@+id/btn_thu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="J" android:textSize="12sp" android:padding="4dp" android:background="@drawable/bg_day_normal" android:textColor="@color/text_primary" android:layout_marginEnd="2dp"/>
-            <Button android:id="@+id/btn_fri" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="V" android:textSize="12sp" android:padding="4dp" android:background="@drawable/bg_day_normal" android:textColor="@color/text_primary" android:layout_marginEnd="2dp"/>
-            <Button android:id="@+id/btn_sat" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="S" android:textSize="12sp" android:padding="4dp" android:background="@drawable/bg_day_normal" android:textColor="@color/text_primary" android:layout_marginEnd="2dp"/>
-            <Button android:id="@+id/btn_sun" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="D" android:textSize="12sp" android:padding="4dp" android:background="@drawable/bg_day_normal" android:textColor="@color/text_primary"/>
-
-        </LinearLayout>
-
-        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2A2A2A"/>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_tasks"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:paddingTop="8dp"
-            android:paddingBottom="80dp"
-            android:clipToPadding="false"
-            android:scrollbars="none"/>
-
-    </LinearLayout>
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_add_task"
-        android:layout_width="wrap_content"
+    <!-- Barra inferior de navegacion. app:menu enlaza los 3 items; itemIconTint e
+         itemTextColor usan el selector de color (ambar activo / gris inactivo).
+         labelVisibilityMode=labeled -> mostrar SIEMPRE el texto bajo el icono. -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_nav"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:contentDescription="Añadir tarea"
-        app:srcCompat="@drawable/ic_add"
-        app:backgroundTint="@color/accent_amber"
-        app:tint="@color/accent_amber_dark"/>
+        android:background="@color/surface_dark"
+        app:menu="@menu/bottom_nav_menu"
+        app:itemIconTint="@color/bottom_nav_item_color"
+        app:itemTextColor="@color/bottom_nav_item_color"
+        app:labelVisibilityMode="labeled"/>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</LinearLayout>

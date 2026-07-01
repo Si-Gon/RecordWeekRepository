@@ -14,6 +14,40 @@ y el versionado es [Semántico](https://semver.org/lang/es/): `MAYOR.MENOR.PARCH
 
 ---
 
+## [2.0] — 2026-07-01
+
+`versionCode 5`
+
+### Cambiado
+- **Rediseño completo de la navegación: de menú desplegable a barra inferior con
+  Fragments.** Las tres vistas principales (Diario, Mensual, Análisis) ahora viven en
+  una **barra de navegación inferior fija** (`BottomNavigationView`), y **Configuración**
+  pasó a un **engranaje en la barra superior**. Antes cada vista era una `Activity`
+  independiente a la que se llegaba desde un desplegable "Menú"; el cambio de vista
+  recreaba la pantalla completa. Ahora `MainActivity` es un único **host**: solo cambia
+  el contenido del centro mientras las barras superior e inferior permanecen fijas (sin
+  parpadeo). La pestaña activa se resalta en ámbar y el botón "+" (FAB) aparece solo en
+  Diario.
+
+### Notas técnicas
+- **De Activities a Fragments.** `MainActivity` dejó de heredar de `BaseActivity` y pasó
+  a ser el host (`AppCompatActivity` con `BottomNavigationView`). Las vistas se
+  convirtieron en `DiaryFragment`, `MonthlyFragment` y `AnalyticsFragment`. El cambio de
+  pestaña usa `FragmentManager.replace()`, de modo que Mensual y Análisis recalculan sus
+  datos al entrar (mismo comportamiento que antes, cuando eran Activities nuevas) con
+  código mínimo. Diario sigue actualizándose solo vía LiveData de Room.
+- **Limpieza de la arquitectura anterior.** Se eliminaron `BaseActivity`,
+  `MonthlyActivity`, `AnalyticsActivity`, `res/menu/menu_main.xml`,
+  `res/layout/activity_monthly.xml` y `res/layout/activity_analytics.xml` (código muerto
+  tras la migración). Nuevos recursos: `menu/bottom_nav_menu.xml`, `menu/menu_top.xml`,
+  íconos de navegación (`ic_nav_daily/monthly/analytics`) y el selector de color
+  `color/bottom_nav_item_color.xml` (ámbar activo / gris inactivo).
+- **Manifest.** Se quitaron las declaraciones de `MonthlyActivity` y `AnalyticsActivity`
+  (ya no son Activities). `MainActivity`, `AddTaskActivity` y `SettingsActivity` siguen
+  siendo las únicas Activities declaradas.
+
+---
+
 ## [1.3] — 2026-06-30
 
 `versionCode 4`

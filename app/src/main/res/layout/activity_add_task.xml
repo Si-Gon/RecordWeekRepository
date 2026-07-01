@@ -80,26 +80,105 @@
 
         </LinearLayout>
 
+        <!-- Selector de TIPO de tarea. Es lo que decide si abajo se muestran los
+             botones de dias (recurrente) o el selector de fecha (puntual). Empieza
+             en "Cada semana" para no cambiar el comportamiento por defecto. -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="Dias de la semana"
+            android:text="Tipo de tarea"
             android:textColor="@color/text_secondary"
             android:textSize="12sp"/>
 
-        <LinearLayout
+        <RadioGroup
+            android:id="@+id/rg_task_type"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="4dp"
             android:orientation="horizontal">
-            <Button android:id="@+id/btn_day_mon" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="L" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
-            <Button android:id="@+id/btn_day_tue" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="M" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
-            <Button android:id="@+id/btn_day_wed" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="X" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
-            <Button android:id="@+id/btn_day_thu" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="J" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
-            <Button android:id="@+id/btn_day_fri" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="V" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
-            <Button android:id="@+id/btn_day_sat" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="S" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
-            <Button android:id="@+id/btn_day_sun" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="D" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
+            <RadioButton
+                android:id="@+id/rb_recurring"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:checked="true"
+                android:text="Cada semana"
+                android:textColor="@color/text_primary"
+                android:buttonTint="@color/accent_amber"/>
+            <RadioButton
+                android:id="@+id/rb_oneoff"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Fecha puntual"
+                android:textColor="@color/text_primary"
+                android:buttonTint="@color/accent_amber"/>
+        </RadioGroup>
+
+        <!-- Bloque RECURRENTE: etiqueta + los 7 botones de dia. Se envuelve todo en
+             un contenedor para poder ocultarlo de golpe cuando el tipo es puntual. -->
+        <LinearLayout
+            android:id="@+id/container_weekdays"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Dias de la semana"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+                <Button android:id="@+id/btn_day_mon" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="L" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
+                <Button android:id="@+id/btn_day_tue" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="M" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
+                <Button android:id="@+id/btn_day_wed" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="X" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
+                <Button android:id="@+id/btn_day_thu" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="J" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
+                <Button android:id="@+id/btn_day_fri" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="V" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
+                <Button android:id="@+id/btn_day_sat" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="S" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:layout_marginEnd="3dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
+                <Button android:id="@+id/btn_day_sun" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:text="D" android:textSize="12sp" android:textAllCaps="false" android:background="@drawable/bg_day_normal" android:backgroundTint="@null" android:textColor="@color/text_primary" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Bloque PUNTUAL: etiqueta + campo de fecha. Oculto por defecto (visibility
+             gone); solo aparece al elegir "Fecha puntual". Al tocar el campo se abre
+             un DatePickerDialog y el texto muestra la fecha elegida. -->
+        <LinearLayout
+            android:id="@+id/container_specific_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Fecha"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"/>
+
+            <TextView
+                android:id="@+id/tv_selected_date"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/bg_spinner"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="Tocar para elegir fecha"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:clickable="true"
+                android:focusable="true"/>
         </LinearLayout>
 
         <TextView

@@ -3,12 +3,14 @@ package com.recordweek;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -24,8 +26,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class AnalyticsActivity extends AppCompatActivity {
+// ============================================================
+//  VISTA ANALISIS como Fragment (antes AnalyticsActivity).
+//  Cambios por ser Fragment: arranque en onViewCreated, widgets con
+//  root.findViewById, observe con getViewLifecycleOwner(). La logica de metricas
+//  y del grafico es identica a la Activity.
+// ============================================================
+public class AnalyticsFragment extends Fragment {
     private TaskViewModel viewModel;
+    private View root;
     private BarChart barChart;
     private TextView tvWeekRange, tvWeekRate, tvWeekDetail, tvStreak, tvBestStreak, tvTotalCompleted, tvNoCategories;
     private TextView btnWeekPrev, btnWeekNext;
@@ -35,27 +44,30 @@ public class AnalyticsActivity extends AppCompatActivity {
     // (no miramos el futuro). Es el "estado" de la pantalla de Analisis.
     private int currentWeekOffset = 0;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_analytics);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("Analisis");
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_analytics, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        root = view;
         viewModel = new ViewModelProvider(this).get(TaskViewModel.class);
 
-        barChart = findViewById(R.id.bar_chart);
-        tvWeekRange = findViewById(R.id.tv_week_range);
-        tvWeekRate = findViewById(R.id.tv_week_rate);
-        tvWeekDetail = findViewById(R.id.tv_week_detail);
-        tvStreak = findViewById(R.id.tv_streak);
-        tvBestStreak = findViewById(R.id.tv_best_streak);
-        tvTotalCompleted = findViewById(R.id.tv_total_completed);
-        tvNoCategories = findViewById(R.id.tv_no_categories);
-        containerCategories = findViewById(R.id.container_categories);
-        btnWeekPrev = findViewById(R.id.btn_week_prev);
-        btnWeekNext = findViewById(R.id.btn_week_next);
+        barChart = root.findViewById(R.id.bar_chart);
+        tvWeekRange = root.findViewById(R.id.tv_week_range);
+        tvWeekRate = root.findViewById(R.id.tv_week_rate);
+        tvWeekDetail = root.findViewById(R.id.tv_week_detail);
+        tvStreak = root.findViewById(R.id.tv_streak);
+        tvBestStreak = root.findViewById(R.id.tv_best_streak);
+        tvTotalCompleted = root.findViewById(R.id.tv_total_completed);
+        tvNoCategories = root.findViewById(R.id.tv_no_categories);
+        containerCategories = root.findViewById(R.id.container_categories);
+        btnWeekPrev = root.findViewById(R.id.btn_week_prev);
+        btnWeekNext = root.findViewById(R.id.btn_week_next);
 
         setupWeekNavigation();
         setupBarChart();
@@ -117,7 +129,7 @@ public class AnalyticsActivity extends AppCompatActivity {
     }
 
     private void observeAnalytics() {
-        viewModel.getAnalyticsData().observe(this, data -> {
+        viewModel.getAnalyticsData().observe(getViewLifecycleOwner(), data -> {
             if (data == null) return;
             bindSummary(data);
             updateBarChart(data);
@@ -163,7 +175,7 @@ public class AnalyticsActivity extends AppCompatActivity {
             return;
         }
         tvNoCategories.setVisibility(View.GONE);
-        LayoutInflater inflater = LayoutInflater.from(this);
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
         for (Map.Entry<String, int[]> entry : data.categoryStats.entrySet()) {
             int scheduled = entry.getValue()[0];
             int completed = entry.getValue()[1];
@@ -178,11 +190,5 @@ public class AnalyticsActivity extends AppCompatActivity {
             bar.setProgress(percent);
             containerCategories.addView(row);
         }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) { onBackPressed(); return true; }
-        return super.onOptionsItemSelected(item);
     }
 }

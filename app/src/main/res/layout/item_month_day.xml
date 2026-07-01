@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Celda de UN dia del calendario mensual (indice compacto). El ancho real se
+     fija en codigo (width=0 + weight=1 al añadirla a la fila) para que las 7
+     columnas midan igual. Contiene el numero del dia y una fila de puntitos con
+     los colores de categoria de las tareas programadas ese dia de semana. -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/cell_day"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:minHeight="46dp"
+    android:paddingTop="3dp"
+    android:paddingBottom="3dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?attr/selectableItemBackgroundBorderless">
+
+    <!-- Numero del dia. Su fondo (circulo ambar si esta seleccionado) se pone en
+         codigo reutilizando bg_day_selected / bg_day_normal. Medida fija para que
+         el circulo de seleccion quede parejo. -->
+    <TextView
+        android:id="@+id/tv_day_number"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:gravity="center"
+        android:textColor="@color/text_primary"
+        android:textSize="13sp"
+        android:text="1"/>
+
+    <!-- Fila de puntitos de categoria (se rellena en codigo). Altura fija para que
+         todas las celdas midan igual, tengan o no puntos. -->
+    <LinearLayout
+        android:id="@+id/dots_row"
+        android:layout_width="wrap_content"
+        android:layout_height="7dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="3dp"/>
+
+</LinearLayout>

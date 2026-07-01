@@ -57,6 +57,13 @@ public class TaskViewModel extends AndroidViewModel {
         });
     }
 
+    // Vista mensual: pide al repository (hilo de fondo) preparar los datos de un
+    // mes (year, monthZeroBased) y devuelve el MonthData por callback. La Activity
+    // es responsable de saltar al hilo principal (runOnUiThread) para pintar.
+    public void loadMonth(int year, int monthZeroBased, TaskRepository.OnMonthLoadedCallback callback) {
+        repository.loadMonthData(year, monthZeroBased, callback);
+    }
+
     // Borra TODO el historial de completaciones (no las tareas). Usado por la
     // opcion "borrar datos" en Configuracion, siempre con confirmacion previa.
     public void deleteAllCompletions() { repository.deleteAllCompletions(); }

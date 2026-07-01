@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Contenido de la vista MENSUAL (solo consulta). Ahora es un Fragment dentro del
+     host. El titulo "Vista mensual" de la barra superior lo pone MainActivity al
+     cambiar de pestana; ya NO hay flecha atras (es una pestana, no una subpantalla).
+     Aqui solo va el contenido: navegacion de mes, calendario indice y agenda. -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_dark">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Navegacion de mes: ‹ mes anio ›. A diferencia de Analisis, aqui SI
+                 se puede avanzar al futuro (un calendario si mira meses siguientes). -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/btn_month_prev"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:text="‹"
+                    android:textColor="@color/accent_amber"
+                    android:textSize="24sp"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"/>
+
+                <TextView
+                    android:id="@+id/tv_month_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Mes"
+                    android:textColor="@color/text_primary"
+                    android:textSize="17sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/btn_month_next"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:text="›"
+                    android:textColor="@color/accent_amber"
+                    android:textSize="24sp"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"/>
+            </LinearLayout>
+
+            <!-- Subtitulo con el cumplimiento del mes hasta hoy -->
+            <TextView
+                android:id="@+id/tv_month_summary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Este mes · 0% cumplido"
+                android:textColor="@color/text_secondary"
+                android:textSize="12.5sp"
+                android:layout_marginBottom="14dp"/>
+
+            <!-- Cabecera de dias de la semana (empieza en LUNES). Los 7 pesos iguales
+                 hacen que cada columna mida lo mismo que las celdas del calendario. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="4dp">
+
+                <TextView style="@style/WeekdayHeaderCell" android:text="L"/>
+                <TextView style="@style/WeekdayHeaderCell" android:text="M"/>
+                <TextView style="@style/WeekdayHeaderCell" android:text="X"/>
+                <TextView style="@style/WeekdayHeaderCell" android:text="J"/>
+                <TextView style="@style/WeekdayHeaderCell" android:text="V"/>
+                <TextView style="@style/WeekdayHeaderCell" android:text="S"/>
+                <TextView style="@style/WeekdayHeaderCell" android:text="D"/>
+            </LinearLayout>
+
+            <!-- Rejilla del calendario. Se construye por codigo: una fila (LinearLayout
+                 horizontal) por semana, con 7 celdas de peso 1. Contenedor vertical. -->
+            <LinearLayout
+                android:id="@+id/container_calendar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"/>
+
+            <!-- Separador entre el calendario y la agenda del dia -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/divider"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Cabecera del dia seleccionado: "Miercoles 18 de junio" + "4/6 hechas" -->
+            <TextView
+                android:id="@+id/tv_day_head"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Dia"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/tv_day_count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="0/0 hechas"
+                android:textColor="@color/text_secondary"
+                android:textSize="12.5sp"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="12dp"/>
+
+            <!-- Agenda por hora del dia elegido. Las tarjetas se inflan en codigo. -->
+            <LinearLayout
+                android:id="@+id/container_agenda"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"/>
+
+            <!-- Mensaje cuando el dia elegido no tiene tareas programadas -->
+            <TextView
+                android:id="@+id/tv_agenda_empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No hay tareas programadas este dia"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp"
+                android:visibility="gone"/>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

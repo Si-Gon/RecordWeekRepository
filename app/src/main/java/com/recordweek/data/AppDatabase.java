@@ -10,7 +10,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 @Database(
     entities = {Task.class, DailyCompletion.class},
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -40,6 +40,26 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
+    // ============================================================
+    //  MIGRACION 3 -> 4: se añadio la columna specific_date a tasks,
+    //  para las tareas PUNTUALES (que ocurren una sola vez en una fecha).
+    //
+    //  Es la operacion de migracion mas segura que existe: ADD COLUMN de
+    //  una columna ANULABLE (TEXT sin NOT NULL). Todas las filas que ya
+    //  existen reciben NULL automaticamente, y en el modelo NULL significa
+    //  "tarea recurrente de siempre". Por eso ninguna tarea tuya cambia de
+    //  comportamiento: las viejas siguen siendo recurrentes.
+    //
+    //  No se usa migracion destructiva (que borraria toda la BD): igual que
+    //  la 2->3, solo tocamos lo justo y conservamos tareas e historial.
+    // ============================================================
+    static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE tasks ADD COLUMN specific_date TEXT");
+        }
+    };
+
     public static AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
             synchronized (AppDatabase.class) {
@@ -54,7 +74,7 @@ public abstract class AppDatabase extends RoomDatabase {
                         // que borra todo en silencio; preferimos que la app
                         // exija una migracion bien escrita ante cada cambio de
                         // esquema (asi no se pierden datos por accidente).
-                        .addMigrations(MIGRATION_2_3)
+                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                         .build();
                 }
             }

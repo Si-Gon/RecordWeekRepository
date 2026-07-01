@@ -7,12 +7,18 @@ import android.provider.Settings;
 import android.view.MenuItem;
 import android.widget.Switch;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import com.recordweek.utils.SettingsManager;
 import com.recordweek.viewmodel.TaskViewModel;
 
+// Pantalla de Configuracion. Es una subpantalla a la que se ENTRA desde el
+// engranaje del host; no es una de las 3 vistas principales, por eso sigue siendo
+// una Activity aparte (no un Fragment de la barra inferior). Antes heredaba de
+// BaseActivity (el viejo menu "Menu"), que ya no existe; ahora extiende
+// AppCompatActivity y solo maneja su flecha "atras".
 public class SettingsActivity extends AppCompatActivity {
     private TaskViewModel viewModel;
     private SettingsManager settings;
@@ -168,9 +174,15 @@ public class SettingsActivity extends AppCompatActivity {
             .show();
     }
 
+    // La flecha "atras" de la ActionBar (android.R.id.home) cierra esta pantalla y
+    // devuelve al host. Antes lo hacia BaseActivity; ahora, al no heredar de ella,
+    // lo manejamos aqui directamente.
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) { onBackPressed(); return true; }
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 }

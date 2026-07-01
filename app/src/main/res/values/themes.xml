@@ -21,6 +21,20 @@
     </style>
     <style name="Theme.RecordWeek" parent="Base.Theme.RecordWeek"/>
 
+    <!-- Celda de la cabecera de dias (L M X J V S D) de la vista mensual.
+         width=0 + weight=1 -> las 7 columnas quedan del mismo ancho y coinciden
+         con las celdas del calendario. Se factoriza en un style para no repetir
+         estos atributos siete veces en el layout. -->
+    <style name="WeekdayHeaderCell">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
     <!-- Tema de la pantalla de bienvenida (splash). Lo dibuja el PROPIO sistema
          mientras la app arranca; no es una Activity que esperemos a propósito.
          - windowSplashScreenBackground: color de fondo (tu azul medianoche).

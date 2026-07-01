@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Menu de la barra SUPERIOR: un unico engranaje que abre Configuracion.
+     showAsAction="always" lo fuerza a mostrarse como icono (no dentro de los 3
+     puntos). Es el reemplazo del viejo desplegable "Menu": la navegacion entre
+     vistas ahora vive en la barra inferior, y aqui solo queda Ajustes. -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_settings"
+        android:icon="@drawable/ic_settings"
+        android:title="@string/menu_settings"
+        app:showAsAction="always"/>
+</menu>

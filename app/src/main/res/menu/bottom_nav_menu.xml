@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Los 3 destinos PRINCIPALES que se alternan seguido. Van en la barra inferior.
+     Cada <item> es un boton del BottomNavigationView: su id se usa en MainActivity
+     para saber que Fragment mostrar; el icono y el titulo son lo que ve el usuario.
+     OJO: aqui NO va Ajustes; ese vuelve a ser un engranaje en la barra superior. -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_diary"
+        android:icon="@drawable/ic_nav_daily"
+        android:title="@string/menu_daily"/>
+    <item
+        android:id="@+id/nav_monthly"
+        android:icon="@drawable/ic_nav_monthly"
+        android:title="@string/menu_monthly"/>
+    <item
+        android:id="@+id/nav_analytics"
+        android:icon="@drawable/ic_nav_analytics"
+        android:title="@string/menu_analytics"/>
+</menu>

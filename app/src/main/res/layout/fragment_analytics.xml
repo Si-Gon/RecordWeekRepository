@@ -7,9 +7,9 @@
     android:orientation="vertical"
     android:background="@color/bg_dark">
 
-    <!-- El titulo "Analisis" y el boton atras los pone la ActionBar del TEMA desde
-         AnalyticsActivity (getSupportActionBar). El AppBarLayout + Toolbar que habia
-         aqui no se conectaba a nada y se dibujaba vacio (franja oscura). Eliminado. -->
+    <!-- Contenido de la vista ANALISIS. Ahora es un Fragment dentro del host. El
+         titulo "Analisis" de la barra superior lo pone MainActivity al cambiar de
+         pestana; ya no hay boton atras (es una pestana, no una subpantalla). -->
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"

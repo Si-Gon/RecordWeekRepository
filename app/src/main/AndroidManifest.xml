@@ -39,13 +39,9 @@
             <meta-data android:name="android.support.PARENT_ACTIVITY" android:value=".MainActivity"/>
         </activity>
 
-        <activity
-            android:name=".AnalyticsActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:parentActivityName=".MainActivity">
-            <meta-data android:name="android.support.PARENT_ACTIVITY" android:value=".MainActivity"/>
-        </activity>
+        <!-- Analisis y Mensual ya NO se declaran: dejaron de ser Activities y pasaron
+             a ser Fragments (AnalyticsFragment / MonthlyFragment) dentro del host
+             MainActivity. Solo las pantallas que son Activity van en el manifest. -->
 
         <activity
             android:name=".SettingsActivity"

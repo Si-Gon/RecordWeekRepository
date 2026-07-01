@@ -6,10 +6,10 @@ import com.recordweek.data.AnalyticsData;
 import com.recordweek.data.AppDatabase;
 import com.recordweek.data.DailyCompletion;
 import com.recordweek.data.DailyCompletionDao;
+import com.recordweek.data.MonthData;
 import com.recordweek.data.Task;
 import com.recordweek.data.TaskDao;
 import com.recordweek.utils.DateUtils;
-import org.json.JSONArray;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -94,7 +94,6 @@ public class TaskRepository {
             //    7 dias; el corte es el domingo de esa semana y el dia tope es 7.
             boolean isCurrentWeek = (weekOffset == 0);
             String cutoffDate = isCurrentWeek ? DateUtils.getTodayString() : sunday;
-            int cutoffDay = isCurrentWeek ? DateUtils.getTodayDayOfWeek() : 7; // Lunes=1..Domingo=7
 
             // Todas las tareas (no solo activas): una tarea pudo desactivarse pero
             // sus completaciones siguen siendo parte del historial.
@@ -104,7 +103,7 @@ public class TaskRepository {
             // Para cada tarea contamos cuantos de sus dias programados caen dentro
             // del corte (denominador) y cuantos se completaron (numerador).
             for (Task task : tasks) {
-                int scheduledSoFar = countScheduledDaysUpTo(task.daysOfWeek, cutoffDay);
+                int scheduledSoFar = countScheduledInElapsedWeek(task, monday, cutoffDate);
                 if (scheduledSoFar == 0) continue; // esta tarea no tocaba en ese tramo
                 int completed = completionDao.countCompletedDays(task.id, monday, cutoffDate);
                 if (completed > scheduledSoFar) completed = scheduledSoFar; // tope de seguridad
@@ -143,21 +142,89 @@ public class TaskRepository {
         });
     }
 
-    // Cuenta cuantos dias programados de la tarea (su JSON daysOfWeek) son <= hoy.
-    // Asi el denominador del cumplimiento solo incluye dias ya pasados esta semana.
-    private int countScheduledDaysUpTo(String daysOfWeekJson, int todayDay) {
-        if (daysOfWeekJson == null || daysOfWeekJson.isEmpty()) return 0;
-        try {
-            JSONArray arr = new JSONArray(daysOfWeekJson);
-            int count = 0;
-            for (int i = 0; i < arr.length(); i++) {
-                int d = arr.getInt(i);
-                if (d >= 1 && d <= todayDay) count++;
+    // ============================================================
+    //  VISTA MENSUAL: prepara de una pasada todo lo que la pantalla
+    //  necesita para un mes (year, monthZeroBased: 0=Enero..11=Diciembre).
+    //  Corre en el executor (hilo de fondo) porque toca la BD; el
+    //  resultado (MonthData ya calculado) vuelve por callback.
+    // ============================================================
+    public void loadMonthData(int year, int monthZeroBased, OnMonthLoadedCallback callback) {
+        executor.execute(() -> {
+            MonthData data = new MonthData();
+
+            // 1) Tareas activas: la agenda de cada dia se arma filtrando estas con
+            //    Task.occursOn (recurrentes por dia de semana, puntuales por fecha).
+            data.activeTasks = taskDao.getActiveTasksSync();
+
+            // 2) Rango de fechas del mes: primer dia (1) y ultimo (28/29/30/31).
+            //    getActualMaximum nos da el ultimo dia real segun el mes/anio.
+            Calendar cal = Calendar.getInstance();
+            cal.clear();
+            cal.set(year, monthZeroBased, 1);
+            int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+            SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
+            String firstDay = fmt.format(cal.getTime());
+            cal.set(Calendar.DAY_OF_MONTH, daysInMonth);
+            String lastDay = fmt.format(cal.getTime());
+
+            // 3) Completaciones marcadas del mes -> Set de claves "taskId|fecha".
+            //    Reutilizamos getCompletedInRange (ya usado por Analytics).
+            for (DailyCompletion dc : completionDao.getCompletedInRange(firstDay, lastDay)) {
+                data.completedKeys.add(MonthData.key(dc.taskId, dc.date));
             }
-            return count;
+
+            // 4) Resumen del mes hasta HOY. Recorremos dia a dia; para cada dia
+            //    contamos las tareas activas programadas ese dia de semana
+            //    (denominador) y cuantas estan en el Set de completadas (numerador).
+            //    Los dias futuros no cuentan aun (no son exigibles todavia).
+            String todayStr = DateUtils.getTodayString();
+            for (int d = 1; d <= daysInMonth; d++) {
+                cal.set(Calendar.DAY_OF_MONTH, d);
+                String dateStr = fmt.format(cal.getTime());
+                if (dateStr.compareTo(todayStr) > 0) break; // formato yyyy-MM-dd ordena como texto
+                int ourDay = DateUtils.dateStringToOurDay(dateStr); // Lunes=1..Domingo=7
+                for (Task t : data.activeTasks) {
+                    if (t.occursOn(dateStr, ourDay)) {
+                        data.monthScheduled++;
+                        if (data.completedKeys.contains(MonthData.key(t.id, dateStr))) {
+                            data.monthCompleted++;
+                        }
+                    }
+                }
+            }
+            data.monthRatePercent = data.monthScheduled > 0
+                ? Math.round(data.monthCompleted * 100f / data.monthScheduled) : 0;
+
+            if (callback != null) callback.onLoaded(data);
+        });
+    }
+
+    // Cuenta cuantos "dias exigibles" tuvo la tarea en la parte YA transcurrida de la
+    // semana (de 'monday' hasta 'cutoffDate' inclusive). Es el denominador del
+    // cumplimiento semanal. Recorremos dia a dia y delegamos en Task.occursOn, que
+    // unifica los dos tipos de tarea:
+    //   - Recurrente: suma 1 por cada dia de semana suyo que ya paso esta semana.
+    //   - Puntual: suma 1 solo si su fecha exacta cae en ese tramo transcurrido.
+    // Al iterar por FECHAS reales (no por numeros de dia sueltos) el mismo bucle
+    // sirve para ambos, y ya no hace falta parsear el JSON aqui.
+    private int countScheduledInElapsedWeek(Task task, String monday, String cutoffDate) {
+        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        Calendar cal = Calendar.getInstance();
+        try {
+            cal.setTime(fmt.parse(monday));
         } catch (Exception e) {
             return 0;
         }
+        int count = 0;
+        for (int i = 0; i < 7; i++) { // como mucho, los 7 dias de la semana
+            String dateStr = fmt.format(cal.getTime());
+            if (dateStr.compareTo(cutoffDate) > 0) break; // ya pasamos el corte
+            int ourDay = DateUtils.calendarDayToOurDay(cal.get(Calendar.DAY_OF_WEEK));
+            if (task.occursOn(dateStr, ourDay)) count++;
+            cal.add(Calendar.DAY_OF_YEAR, 1);
+        }
+        return count;
     }
 
     // Calcula racha actual y mejor racha a partir de las fechas (desc) con actividad.
@@ -235,6 +302,10 @@ public class TaskRepository {
                     o.put("color", t.color);
                     o.put("description", t.description);
                     o.put("daysOfWeek", t.daysOfWeek);
+                    // specificDate solo tiene valor en tareas puntuales; en las
+                    // recurrentes es null y JSONObject.put lo omite (queda ausente),
+                    // por eso al importar usamos optString(...,null) mas abajo.
+                    o.put("specificDate", t.specificDate);
                     o.put("hour", t.notificationHour);
                     o.put("minute", t.notificationMinute);
                     o.put("active", t.isActive);
@@ -301,6 +372,10 @@ public class TaskRepository {
                         o.optInt("minute", 0),
                         o.optInt("active", 1)
                     );
+                    // Recuperamos la fecha puntual. Si el respaldo es antiguo (no tiene
+                    // el campo) o la tarea es recurrente, optString devuelve null y la
+                    // tarea queda como recurrente, que es justo lo que corresponde.
+                    t.specificDate = o.optString("specificDate", null);
                     long newId = taskDao.insert(t); // Room asigna el id autoincrementado
                     if (oldId != -1) idMap.put(oldId, (int) newId);
                     importedTasks++;
@@ -339,4 +414,5 @@ public class TaskRepository {
     public interface OnTaskInsertedCallback { void onInserted(Task task); }
     public interface OnTaskLoadedCallback { void onLoaded(Task task); }
     public interface OnAnalyticsLoadedCallback { void onLoaded(AnalyticsData data); }
+    public interface OnMonthLoadedCallback { void onLoaded(MonthData data); }
 }

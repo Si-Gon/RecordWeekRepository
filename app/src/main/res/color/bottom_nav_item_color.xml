@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lista de estados de color para la barra inferior. Un "selector" de color
+     devuelve un color distinto segun el estado de la vista. Aqui:
+       - state_checked=true (pestana activa) -> ambar de acento.
+       - por defecto (resto) -> gris de texto secundario.
+     El BottomNavigationView lo usa tanto para el icono (itemIconTint) como para
+     el texto (itemTextColor), asi ambos se pintan igual sin codigo extra.
+     IMPORTANTE: el item por defecto (sin state_*) va SIEMPRE al final; actua como
+     "else". Si fuera primero, atraparia todos los casos y el ambar nunca saldria. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/accent_amber" android:state_checked="true"/>
+    <item android:color="@color/text_secondary"/>
+</selector>
