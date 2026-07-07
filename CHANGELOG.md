@@ -14,6 +14,43 @@ y el versionado es [Semántico](https://semver.org/lang/es/): `MAYOR.MENOR.PARCH
 
 ---
 
+## [2.0.1] — 2026-07-07
+
+`versionCode 6`
+
+### Corregido
+- **Crash al crear/editar tareas si el usuario revocó el permiso de alarmas
+  exactas.** Desde Android 12 (API 31), `AlarmManager.setExactAndAllowWhileIdle()`
+  lanza `SecurityException` si el permiso "Alarmas y recordatorios" está desactivado
+  para la app. El código lo llamaba directamente, sin comprobar antes
+  `canScheduleExactAlarms()`, así que la app se cerraba al guardar una tarea o al
+  reiniciar el teléfono con el permiso revocado. Ahora un método intermedio
+  (`scheduleExactAlarm`) verifica el permiso en tiempo de ejecución y, si no está
+  concedido, programa una alarma **inexacta** (`setAndAllowWhileIdle`): la
+  notificación sigue llegando, solo que Android puede retrasarla unos minutos para
+  ahorrar batería. Sin permiso revocado, el comportamiento es idéntico al anterior
+  (alarma exacta).
+- **Reprogramación de notificaciones tras reiniciar podía quedar a medias.**
+  `BootReceiver` hacía el trabajo de base de datos en un hilo de fondo sin avisar al
+  sistema de que la operación era asíncrona, así que Android podía dar por terminado
+  el receiver (y matar el proceso) antes de acabar de reprogramar las alarmas. Ahora
+  usa `goAsync()` y llama a `PendingResult.finish()` dentro de un `finally`, de modo
+  que el proceso se mantiene vivo hasta completar la reprogramación pase lo que pase.
+  Además se cierra el `ExecutorService` (`shutdown()`) para no dejar hilos colgando.
+
+### Notas técnicas
+- **Formato de fechas ahora es thread-safe.** `DateUtils` usaba un
+  `SimpleDateFormat` estático compartido. `SimpleDateFormat` **no es seguro entre
+  hilos**: como Analytics formatea/parsea fechas en un hilo de fondo mientras la UI
+  lo hace en el principal, un acceso simultáneo podía devolver fechas corruptas o
+  lanzar una excepción intermitente (difícil de reproducir). Se migró a
+  `java.time.LocalDate` + `DateTimeFormatter`, que son **inmutables y thread-safe**
+  (disponibles desde `minSdk 29`). El patrón de fecha (`"yyyy-MM-dd"`) y la
+  convención de días (Lunes=1…Domingo=7, que `DayOfWeek.getValue()` ya respeta por
+  ISO-8601) se conservan idénticos, así que los datos existentes se leen sin cambios.
+
+---
+
 ## [2.0] — 2026-07-01
 
 `versionCode 5`

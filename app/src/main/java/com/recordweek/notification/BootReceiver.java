@@ -14,11 +14,19 @@ public class BootReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
         if (Intent.ACTION_BOOT_COMPLETED.equals(action) || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)) {
+            PendingResult pendingResult = goAsync();
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.execute(() -> {
-                AppDatabase db = AppDatabase.getInstance(context);
-                List<Task> activeTasks = db.taskDao().getActiveTasksSync();
-                for (Task task : activeTasks) NotificationScheduler.scheduleTask(context, task);
+                try {
+                    AppDatabase db = AppDatabase.getInstance(context);
+                    List<Task> activeTasks = db.taskDao().getActiveTasksSync();
+                    for (Task task : activeTasks) {
+                        NotificationScheduler.scheduleTask(context, task);
+                    }
+                } finally {
+                    executor.shutdown();
+                    pendingResult.finish();
+                }
             });
         }
     }

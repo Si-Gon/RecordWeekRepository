@@ -1,0 +1,127 @@
+@startuml
+!define RECTANGLE class
+
+skinparam backgroundColor #FAFAFA
+skinparam component {
+    BackgroundColor<<Presentation>> #E3F2FD
+    BorderColor<<Presentation>> #1565C0
+    BackgroundColor<<Domain>> #FFF3E0
+    BorderColor<<Domain>> #E65100
+    BackgroundColor<<Data>> #E8F5E9
+    BorderColor<<Data>> #2E7D32
+    BackgroundColor<<Infrastructure>> #F3E5F5
+    BorderColor<<Infrastructure>> #6A1B9A
+    BackgroundColor<<External>> #FFF8E1
+    BorderColor<<External>> #F9A825
+    ArrowColor #555555
+    ArrowThickness 1.5
+}
+
+package "Presentation Layer (UI)" as Presentation <<Presentation>> {
+    [MainActivity] as MainActivity
+    [DiaryFragment] as DiaryFragment
+    [MonthlyFragment] as MonthlyFragment
+    [AnalyticsFragment] as AnalyticsFragment
+    [AddTaskActivity] as AddTaskActivity
+    [SettingsActivity] as SettingsActivity
+    [TaskAdapter] as TaskAdapter
+    [TaskViewModel] as TaskViewModel
+}
+
+package "Domain Layer (Business Logic)" as Domain <<Domain>> {
+    [TaskRepository] as TaskRepository
+    [Task] as TaskEntity
+    [DailyCompletion] as CompletionEntity
+    [AnalyticsData] as AnalyticsData
+    [MonthData] as MonthData
+    [DateUtils] as DateUtils
+    [NotificationScheduler] as NotificationScheduler
+}
+
+package "Data Layer (Persistence)" as Data <<Data>> {
+    [AppDatabase] as AppDatabase
+    [TaskDao] as TaskDao
+    [DailyCompletionDao] as CompletionDao
+    [AppDatabase.Migrations] as Migrations
+    [SettingsManager] as SettingsManager
+}
+
+package "Android Framework / Infrastructure" as Infra <<Infrastructure>> {
+    [AlarmManager] as AlarmManager
+    [NotificationManager] as NotificationManager
+    [BroadcastReceiver] as BroadcastReceiver
+    [WorkManager] as WorkManager
+    [Room] as Room
+    [LiveData] as LiveData
+    [ViewModel] as ViewModelLib
+    [MPAndroidChart] as MPChart
+}
+
+package "External / Storage" as External <<External>> {
+    [SQLite] as SQLite
+    [SharedPreferences] as SharedPrefs
+    [FileSystem] as FileSystem
+}
+
+' Relationships - Presentation -> Domain
+MainActivity ..> DiaryFragment : "hosts (replace)"
+MainActivity ..> MonthlyFragment : "hosts (replace)"
+MainActivity ..> AnalyticsFragment : "hosts (replace)"
+MainActivity ..> AddTaskActivity : "startsActivity"
+MainActivity ..> SettingsActivity : "startsActivity"
+
+DiaryFragment --> TaskViewModel : "observa LiveData\nsetSelectedDay()\nsetCompletion()"
+MonthlyFragment --> TaskViewModel : "loadMonth()\nobserve MonthData"
+AnalyticsFragment --> TaskViewModel : "loadAnalytics()\nobserve AnalyticsData"
+AddTaskActivity --> TaskViewModel : "insertTask()\nupdateTask()\ngetTaskById()"
+SettingsActivity --> TaskViewModel : "exportData()\nimportData()\ndeleteAllCompletions()"
+
+TaskAdapter --> TaskEntity : "bind(Task, Completion)"
+TaskAdapter --> CompletionEntity : "bind checkbox state"
+
+' Relationships - ViewModel -> Repository
+TaskViewModel --> TaskRepository : "delegate all ops"
+TaskViewModel --> LiveData : "expose LiveData"
+TaskViewModel --> ViewModelLib : "extends AndroidViewModel"
+
+' Relationships - Repository -> Domain/Data
+TaskRepository --> TaskEntity : "manipula"
+TaskRepository --> CompletionEntity : "upsert / query"
+TaskRepository --> AnalyticsData : "build (background)"
+TaskRepository --> MonthData : "build (background)"
+TaskRepository --> DateUtils : "cálculos fecha/semana"
+TaskRepository --> NotificationScheduler : "schedule/cancel alarms"
+TaskRepository --> AppDatabase : "acceso DAOs"
+TaskRepository --> SettingsManager : "notif enabled check"
+TaskRepository --> Migrations : "v2→3, v3→4"
+
+' Relationships - Repository -> DAOs
+TaskRepository --> TaskDao : "getAll/Active/Insert/Update/Delete"
+TaskRepository --> CompletionDao : "upsert/getByDate/count/getDistinctDates"
+
+' Relationships - DAOs -> Room/Database
+TaskDao --> Room : "@Query/@Insert/@Update/@Delete"
+CompletionDao --> Room : "@Query/@Insert/@Update/@Delete"
+AppDatabase --> Room : "RoomDatabase abstract"
+AppDatabase --> SQLite : "persiste en"
+AppDatabase --> Migrations : "registra"
+
+' Relationships - Notifications
+NotificationScheduler --> AlarmManager : "setExactAndAllowWhileIdle"
+NotificationScheduler --> NotificationManager : "notify (channel recordweek)"
+NotificationScheduler --> BroadcastReceiver : "PendingIntent -> NotificationReceiver"
+BroadcastReceiver --> AlarmManager : "recibe alarmas"
+BroadcastReceiver --> NotificationScheduler : "BootReceiver reprograma todo"
+
+' Relationships - Settings
+SettingsManager --> SharedPrefs : "clave: notifications_enabled"
+SettingsActivity --> SettingsManager : "get/set notificaciones"
+
+' Relationships - Export/Import
+TaskRepository --> FileSystem : "export JSON / import JSON"
+
+' Relationships - Analytics Chart
+AnalyticsFragment --> MPChart : "BarChart render"
+AnalyticsData --> MPChart : "data.completionsPerWeekday"
+
+@enduml

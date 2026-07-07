@@ -1,0 +1,96 @@
+@startuml
+!define RECTANGLE class
+
+skinparam backgroundColor #FAFAFA
+skinparam sequence {
+    ParticipantPadding 20
+    BoxPadding 10
+    LifeLineBackgroundColor #FFFFFF
+    LifeLineBorderColor #999999
+    ActorBackgroundColor #E3F2FD
+    ActorBorderColor #1565C0
+    BoundaryBackgroundColor #FFF3E0
+    BoundaryBorderColor #E65100
+    ControlBackgroundColor #E8F5E9
+    ControlBorderColor #2E7D32
+    EntityBackgroundColor #F3E5F5
+    EntityBorderColor #6A1B9A
+    MessageArrowColor #555555
+    MessageFontSize 12
+    NoteBackgroundColor #FFFFF0
+    NoteBorderColor #F9A825
+}
+
+actor "Usuario" as User
+boundary "MonthlyFragment" as Monthly
+control "TaskViewModel" as VM
+entity "TaskRepository" as Repo
+database "Room DB\n(TaskDao, CompletionDao)" as DB
+
+== Entrada a Vista Mensual (mes actual) ==
+User -> Monthly : Navega pestaña "Mensual" (BottomNav)
+Monthly -> Monthly : currentYear=2026, currentMonth=6 (Jul), selectedDay=18
+Monthly -> VM : loadMonth(2026, 6, callback)
+VM -> Repo : loadMonthData(2026, 6, callback)
+Repo -> Repo : executor.execute { ... }
+Repo -> DB : TaskDao.getActiveTasksSync()
+DB --> Repo : List<Task> activas
+Repo -> DB : CompletionDao.getCompletedInRange(1-jul, 31-jul)
+DB --> Repo : List<DailyCompletion> del mes
+Repo -> Repo : build MonthData
+note right of Repo
+MonthData:
+- activeTasks: lista tareas activas
+- completedKeys: Set<"taskId|yyyy-MM-dd">
+- monthScheduled/monthCompleted/monthRate%:
+  recorre día 1..hoy, para cada día:
+    ourDay = dayOfWeek = dateStringToOurDay(fecha)
+    para cada task en activeTasks:
+      if task.occursOn(fecha, ourDay):
+        monthScheduled++
+        if completedKeys.contains(key(taskId,fecha)): monthCompleted++
+  monthRate% = round(monthCompleted*100/monthScheduled)
+end note
+Repo --> VM : callback.onLoaded(MonthData)
+VM --> Monthly : callback en background -> runOnUiThread
+Monthly -> Monthly : monthData = data
+Monthly -> Monthly : renderCalendar()
+Monthly -> Monthly : renderAgenda() para selectedDay (hoy)
+
+== Render Calendar (grilla 7 columnas) ==
+Monthly -> Monthly : renderCalendar()
+Monthly -> Monthly : calcula leadingBlanks (día 1 = miércoles -> 2 huecos)
+Monthly -> Monthly : crea filas LinearLayout (7 celdas c/u)
+loop cada celda día 1..31
+    Monthly -> Monthly : bindDayCell(cell, dayNumber, isToday)
+    Monthly -> Monthly : dateStr = dateOfMonthDay(day) -> "2026-07-18"
+    Monthly -> Monthly : ourDay = ourDayOfMonthDay(day) -> 3 (Miércoles)
+    Monthly -> Monthly : renderDots(dotsRow, dateStr, ourDay)
+    loop cada task en monthData.activeTasks
+        Monthly -> Task : task.occursOn(dateStr, ourDay)
+        Task --> Monthly : true/false
+    end
+    Monthly -> Monthly : colors = Set únicos de task.color
+    Monthly -> Monthly : pinta hasta 4 puntitos (circulos 5dp)
+end
+
+== Usuario toca un día del calendario ==
+User -> Monthly : Click celda día 25
+Monthly -> Monthly : selectedDay = 25
+Monthly -> Monthly : renderCalendar() (re-pinta selección)
+Monthly -> Monthly : renderAgenda()
+Monthly -> Monthly : dateStr = "2026-07-25", ourDay = 7 (Domingo)
+Monthly -> Monthly : filtra dayTasks = tasks donde occursOn(dateStr, ourDay)
+Monthly -> Monthly : ordena por notificationHour*60+minute
+Monthly -> Monthly : para cada task -> bindAgendaCard()
+Monthly -> Monthly : isDone = completedKeys.contains(key(taskId, dateStr))
+Monthly -> Monthly : pinta tarjeta: nodo lleno (hecha) / hueco (pendiente)
+
+== Cambio de mes (flechas ◀ ▶) ==
+User -> Monthly : Click ▶ (btnMonthNext)
+Monthly -> Monthly : changeMonth(+1)
+Monthly -> Monthly : currentMonth = 7 (Ago), selectedDay = 1
+Monthly -> VM : loadMonth(2026, 7, callback)
+... mismo flujo carga mes ...
+
+@enduml

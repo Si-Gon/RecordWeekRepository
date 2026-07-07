@@ -1,0 +1,82 @@
+@startuml
+!define RECTANGLE class
+
+skinparam backgroundColor #FAFAFA
+skinparam sequence {
+    ParticipantPadding 20
+    BoxPadding 10
+    LifeLineBackgroundColor #FFFFFF
+    LifeLineBorderColor #999999
+    ActorBackgroundColor #E3F2FD
+    ActorBorderColor #1565C0
+    BoundaryBackgroundColor #FFF3E0
+    BoundaryBorderColor #E65100
+    ControlBackgroundColor #E8F5E9
+    ControlBorderColor #2E7D32
+    EntityBackgroundColor #F3E5F5
+    EntityBorderColor #6A1B9A
+    MessageArrowColor #555555
+    MessageFontSize 12
+    NoteBackgroundColor #FFFFF0
+    NoteBorderColor #F9A825
+}
+
+actor "Usuario" as User
+boundary "DiaryFragment" as Diary
+control "TaskViewModel" as VM
+entity "TaskRepository" as Repo
+database "Room DB\n(TaskDao, CompletionDao)" as DB
+control "NotificationScheduler" as Notif
+boundary "Android\nAlarmManager" as Alarm
+
+== Inicio de la App (MainActivity) ==
+User -> Diary : Abre app (MainActivity host)
+Diary -> VM : getActiveTasks().observe()
+VM -> Repo : getActiveTasks()
+Repo -> DB : TaskDao.getActiveTasks() [LiveData]
+DB --> Repo : LiveData<List<Task>>
+Repo --> VM : LiveData<List<Task>>
+VM --> Diary : LiveData emitido
+Diary -> Diary : filterTasksForDay(hoy)
+Diary -> VM : getCompletionsByDate(hoy).observe()
+VM -> Repo : getCompletionsByDate(hoy)
+Repo -> DB : CompletionDao.getCompletionsByDate(hoy) [LiveData]
+DB --> Repo : LiveData<List<DailyCompletion>>
+Repo --> VM : LiveData<List<DailyCompletion>>
+VM --> Diary : LiveData emitido
+Diary -> Diary : adapter.setCompletions() -> render lista
+
+== Usuario marca tarea completada (SOLO hoy) ==
+User -> Diary : Click checkbox en tarea
+Diary -> VM : setCompletion(taskId, hoy, true)
+VM -> Repo : upsertCompletion(DailyCompletion)
+Repo -> DB : CompletionDao.insert() [background thread]
+DB --> Repo : OK (upsert por unique index taskId|date)
+Repo -> Notif : (nada, solo persistencia)
+Repo --> VM : callback/void
+VM --> Diary : LiveData CompletionDao.getCompletionsByDate(hoy) emite nuevo valor
+Diary -> Diary : adapter.setCompletions() -> checkbox checked
+
+note right of Diary
+Solo se permite marcar/desmarcar
+el día de HOY (editable=true).
+Días pasados/futuros: checkbox
+apagado (alpha=0.4), solo lectura.
+end note
+
+== Navegación a otro día (selector Lunes-Domingo) ==
+User -> Diary : Click botón día (ej. Miércoles)
+Diary -> Diary : selectDay(3)
+Diary -> VM : setSelectedDay(3)
+Diary -> Diary : filterTasksForDay(3)
+Diary -> Diary : getDateForDay(3) -> "2026-07-08"
+Diary -> VM : getCompletionsByDate("2026-07-08").observe()
+VM -> Repo : getCompletionsByDate("2026-07-08")
+Repo -> DB : CompletionDao.getCompletionsByDate() [LiveData]
+DB --> Repo : LiveData
+Repo --> VM : LiveData
+VM --> Diary : LiveData emitido
+Diary -> Diary : adapter.setCompletions() -> render histórico
+Diary -> Diary : adapter.setEditable(false) -> checkboxes disabled
+
+@enduml

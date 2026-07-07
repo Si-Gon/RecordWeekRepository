@@ -1,0 +1,340 @@
+@startuml
+!define RECTANGLE class
+
+skinparam backgroundColor #FAFAFA
+skinparam class {
+    BackgroundColor<<Entity>> #E8F5E9
+    BorderColor<<Entity>> #2E7D32
+    BackgroundColor<<DAO>> #E3F2FD
+    BorderColor<<DAO>> #1565C0
+    BackgroundColor<<Repository>> #FFF3E0
+    BorderColor<<Repository>> #E65100
+    BackgroundColor<<ViewModel>> #F3E5F5
+    BorderColor<<ViewModel>> #6A1B9A
+    BackgroundColor<<UI>> #E0F2F1
+    BorderColor<<UI>> #00695C
+    BackgroundColor<<Utility>> #FFF8E1
+    BorderColor<<Utility>> #F9A825
+    BackgroundColor<<External>> #FBE9E7
+    BorderColor<<External>> #D84315
+    ArrowColor #555555
+    ArrowThickness 1.5
+}
+
+package "Data Entities" as Entities <<Entity>> {
+    class Task <<Entity>> {
+        +id: int
+        +name: String
+        +color: String
+        +category: String
+        +description: String
+        +daysOfWeek: String (JSON)
+        +notificationHour: int
+        +notificationMinute: int
+        +isActive: int
+        +specificDate: String (nullable)
+        --
+        +isOneOff(): boolean
+        +occursOn(date: String, ourDay: int): boolean
+    }
+    
+    class DailyCompletion <<Entity>> {
+        +id: int
+        +taskId: int
+        +date: String (yyyy-MM-dd)
+        +completed: int (0/1)
+    }
+    
+    class MonthData <<Entity>> {
+        +activeTasks: List<Task>
+        +completedKeys: Set<String> (taskId|date)
+        +monthScheduled: int
+        +monthCompleted: int
+        +monthRatePercent: int
+        --
+        +key(taskId, date): String
+    }
+    
+    class AnalyticsData <<Entity>> {
+        +weekScheduled: int
+        +weekCompleted: int
+        +weekRatePercent: int
+        +currentStreak: int
+        +bestStreak: int
+        +totalCompletedAllTime: int
+        +completionsPerWeekday: int[7]
+        +categoryStats: Map<String, int[2]>
+        --
+        +isEmpty(): boolean
+    }
+}
+
+package "Data Access (DAO)" as DAOs <<DAO>> {
+    interface TaskDao <<DAO>> {
+        +insert(Task): long
+        +update(Task): void
+        +delete(Task): void
+        +getAllTasks(): LiveData<List<Task>>
+        +getActiveTasks(): LiveData<List<Task>>
+        +getTaskById(id): Task
+        +getAllTasksSync(): List<Task>
+        +getActiveTasksSync(): List<Task>
+        +deleteAll(): void
+    }
+    
+    interface DailyCompletionDao <<DAO>> {
+        +insert(DailyCompletion): void
+        +getCompletionLive(taskId, date): LiveData<DailyCompletion>
+        +getCompletionsByDate(date): LiveData<List<DailyCompletion>>
+        +getCompletedInRange(start, end): List<DailyCompletion>
+        +countCompletedDays(taskId, start, end): int
+        +getTotalCompletedAllTime(): int
+        +getDistinctCompletedDatesDesc(): List<String>
+        +getAllSync(): List<DailyCompletion>
+        +deleteAll(): void
+    }
+}
+
+package "Database" as DatabasePkg {
+    abstract class AppDatabase <<External>> {
+        +taskDao(): TaskDao
+        +dailyCompletionDao(): DailyCompletionDao
+        +getInstance(Context): AppDatabase
+        --
+        #MIGRATION_2_3: Migration
+        #MIGRATION_3_4: Migration
+    }
+}
+
+package "Repository" as RepoPkg <<Repository>> {
+    class TaskRepository <<Repository>> {
+        -taskDao: TaskDao
+        -completionDao: DailyCompletionDao
+        -executor: ExecutorService (4 threads)
+        -allTasks: LiveData<List<Task>>
+        -activeTasks: LiveData<List<Task>>
+        --
+        +getAllTasks(): LiveData<List<Task>>
+        +getActiveTasks(): LiveData<List<Task>>
+        +insertTask(Task, callback): void
+        +updateTask(Task): void
+        +deleteTask(Task): void
+        +getTaskById(id, callback): void
+        +upsertCompletion(DailyCompletion): void
+        +getCompletionLive(id, date): LiveData<DailyCompletion>
+        +getCompletionsByDate(date): LiveData<List<DailyCompletion>>
+        +deleteAllCompletions(): void
+        +loadAnalytics(weekOffset, callback): void
+        +loadMonthData(year, month, callback): void
+        +exportDataAsJson(callback): void
+        +importDataFromJson(json, callback): void
+        --
+        -countScheduledInElapsedWeek(Task, monday, cutoff): int
+        #computeStreaks(datesDesc, AnalyticsData): void
+        #sameDay(Calendar, Calendar): boolean
+    }
+}
+
+package "ViewModel" as VMPkg <<ViewModel>> {
+    class TaskViewModel <<ViewModel>> {
+        -repository: TaskRepository
+        -allTasks: LiveData<List<Task>>
+        -selectedDay: MutableLiveData<Integer>
+        -isLoading: MutableLiveData<Boolean>
+        -analyticsData: MutableLiveData<AnalyticsData>
+        --
+        +getAllTasks(): LiveData<List<Task>>
+        +getActiveTasks(): LiveData<List<Task>>
+        +insertTask(Task, callback): void
+        +updateTask(Task): void
+        +deleteTask(Task): void
+        +getTaskById(id, callback): void
+        +setCompletion(id, date, completed): void
+        +getCompletionLive(id, date): LiveData<DailyCompletion>
+        +getCompletionsByDate(date): LiveData<List<DailyCompletion>>
+        +getAnalyticsData(): LiveData<AnalyticsData>
+        +loadAnalytics(weekOffset): void
+        +loadMonth(year, month, callback): void
+        +deleteAllCompletions(): void
+        +exportData(callback): void
+        +importData(json, callback): void
+        +getSelectedDay(): MutableLiveData<Integer>
+        +setSelectedDay(day): void
+        +getIsLoading(): LiveData<Boolean>
+    }
+}
+
+package "Presentation (UI)" as UIPkg <<UI>> {
+    class MainActivity <<UI>> {
+        -bottomNav: BottomNavigationView
+        +showFragment(itemId): void
+        +buildDiaryTitle(): CharSequence
+        +cancelWeeklyReset(): void
+    }
+    
+    class DiaryFragment <<UI>> {
+        -viewModel: TaskViewModel
+        -adapter: TaskAdapter
+        -dayButtons: List<Button>
+        -currentSelectedDay: int
+        -allActiveTasks: List<Task>
+        -currentCompletionsLiveData: LiveData<...>
+        --
+        +selectDay(day): void
+        +filterTasksForDay(day): void
+        +getDateForDay(day): String
+        +observeCompletionsForCurrentDay(): void
+        +showTaskOptions(Task): void
+        +removeDayFromTask(Task, day): void
+    }
+    
+    class MonthlyFragment <<UI>> {
+        -viewModel: TaskViewModel
+        -currentYear: int
+        -currentMonth: int (0-11)
+        -selectedDay: int
+        -monthData: MonthData
+        --
+        +changeMonth(delta): void
+        +loadMonth(): void
+        +renderCalendar(): void
+        +bindDayCell(View, day, isToday): void
+        +renderDots(dotsRow, dateStr, ourDay): void
+        +renderAgenda(): void
+        +bindAgendaCard(View, Task, isDone): void
+        +buildCardBackground(color): Drawable
+        +buildNode(isDone): Drawable
+    }
+    
+    class AnalyticsFragment <<UI>> {
+        -viewModel: TaskViewModel
+        -barChart: BarChart
+        -currentWeekOffset: int
+        --
+        +showWeek(weekOffset): void
+        +setupBarChart(): void
+        +bindSummary(AnalyticsData): void
+        +updateBarChart(AnalyticsData): void
+        +updateCategories(AnalyticsData): void
+    }
+    
+    class AddTaskActivity <<UI>> {
+        +create/edit Task
+        +category -> color auto-mapping
+        +one-off date picker
+    }
+    
+    class SettingsActivity <<UI>> {
+        -viewModel: TaskViewModel
+        -settings: SettingsManager
+        +exportData(): void
+        +importData(uri): void
+        +confirmDeleteCompletions(): void
+    }
+    
+    class TaskAdapter <<UI>> {
+        -taskList: List<Task>
+        -completionsMap: Map<Integer, DailyCompletion>
+        -editable: boolean
+        --
+        +setTasks(List<Task>): void
+        +setCompletions(List<DailyCompletion>): void
+        +setEditable(boolean): void
+        +buildCardBackground(color): Drawable
+        +bindCheckbox(Task, isChecked): void
+    }
+}
+
+package "Notifications & Utils" as UtilPkg <<Utility>> {
+    class NotificationScheduler <<Utility>> {
+        +scheduleTask(Context, Task): void
+        +cancelTask(Context, Task): void
+        -scheduleExactAlarm(AlarmManager, trigger, PendingIntent): void
+        -getTriggerForDate(date, hour, min): long
+        -getNextTriggerTime(dayOfWeek, hour, min): long
+        -cancelCode(Context, AlarmManager, requestCode): void
+    }
+    
+    class NotificationReceiver <<External>> {
+        +onReceive(Context, Intent): void
+        -showNotification(taskId, name, category): void
+    }
+    
+    class BootReceiver <<External>> {
+        +onReceive(Context, Intent): void
+        --
+        goAsync() + ExecutorService:
+        lee tareas activas y reprograma
+        en background; finish() + shutdown()
+        en finally
+    }
+    
+    class DateUtils <<Utility>> {
+        +getTodayString(): String
+        +getTodayDayOfWeek(): int (1-7)
+        +calendarDayToOurDay(calDay): int
+        +ourDayToCalendarDay(ourDay): int
+        +getMondayForOffset(offset): String
+        +getSundayForOffset(offset): String
+        +getWeekRangeLabel(offset): String
+        +dateStringToOurDay(dateStr): int
+        +formatTime(hour, min): String
+    }
+    
+    class SettingsManager <<Utility>> {
+        -prefs: SharedPreferences
+        +areNotificationsEnabled(): boolean
+        +setNotificationsEnabled(boolean): void
+    }
+}
+
+' Relationships
+Task "1" --> "0..*" DailyCompletion : "has completions"
+Task "1" --> "0..1" MonthData : "appears in"
+DailyCompletion "0..*" --> "1" Task : "belongs to"
+
+AppDatabase "1" --> "1" TaskDao : "exposes"
+AppDatabase "1" --> "1" DailyCompletionDao : "exposes"
+AppDatabase "1" --> "2" Migration : "registers"
+
+TaskRepository "1" --> "1" TaskDao : "uses"
+TaskRepository "1" --> "1" DailyCompletionDao : "uses"
+TaskRepository "1" --> "1" NotificationScheduler : "delegates to"
+TaskRepository "1" --> "1" DateUtils : "uses"
+TaskRepository "1" --> "1" SettingsManager : "checks notif enabled"
+TaskRepository ..> AnalyticsData : "creates"
+TaskRepository ..> MonthData : "creates"
+
+TaskViewModel "1" --> "1" TaskRepository : "wraps"
+TaskViewModel ..> LiveData : "exposes"
+
+MainActivity "1" --> "1" DiaryFragment : "hosts (replace)"
+MainActivity "1" --> "1" MonthlyFragment : "hosts (replace)"
+MainActivity "1" --> "1" AnalyticsFragment : "hosts (replace)"
+
+DiaryFragment "1" --> "1" TaskViewModel : "observes"
+DiaryFragment "1" --> "1" TaskAdapter : "uses"
+DiaryFragment ..> DateUtils : "uses"
+
+MonthlyFragment "1" --> "1" TaskViewModel : "uses"
+MonthlyFragment ..> DateUtils : "uses"
+
+AnalyticsFragment "1" --> "1" TaskViewModel : "uses"
+AnalyticsFragment ..> MPAndroidChart : "renders BarChart"
+
+AddTaskActivity "1" --> "1" TaskViewModel : "insert/update"
+
+SettingsActivity "1" --> "1" TaskViewModel : "export/import/delete"
+SettingsActivity "1" --> "1" SettingsManager : "toggle notifs"
+
+TaskAdapter "1" --> "1" Task : "binds"
+TaskAdapter "1" --> "1" DailyCompletion : "binds checkbox"
+
+NotificationScheduler "1" --> "1" AlarmManager : "setExactAndAllowWhileIdle\n(fallback a setAndAllowWhileIdle\nsi no hay permiso, API 31+)"
+NotificationScheduler "1" --> "1" NotificationManager : "notify"
+NotificationScheduler ..> DateUtils : "ourDayToCalendarDay"
+
+NotificationReceiver ..> NotificationManager : "show notification"
+BootReceiver ..> NotificationScheduler : "reschedule all"
+
+@enduml

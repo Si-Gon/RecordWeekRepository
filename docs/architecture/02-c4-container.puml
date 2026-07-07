@@ -1,0 +1,81 @@
+@startuml
+!define RECTANGLE class
+
+skinparam backgroundColor #FAFAFA
+skinparam rectangle {
+    BackgroundColor<<Person>> #E8F4FD
+    BorderColor<<Person>> #1976D2
+    BackgroundColor<<Container>> #F3E5F5
+    BorderColor<<Container>> #7B1FA2
+    BackgroundColor<<Container_Db>> #E8F5E9
+    BorderColor<<Container_Db>> #388E3C
+    BackgroundColor<<Container_Ext>> #FFF3E0
+    BorderColor<<Container_Ext>> #F57C00
+    ArrowColor #555555
+    ArrowThickness 1.5
+}
+
+actor "Usuario" as User <<Person>>
+
+rectangle "Record Week App\n(Android, minSdk 29, targetSdk 34)" as App <<Container>> {
+    rectangle "MainActivity (Host)\nBottomNavigationView + FragmentContainer\nSplash Screen API" as MainActivity <<Container>>
+    
+    rectangle "DiaryFragment\nVista diaria: lista tareas del día\nMarcar/desmarcar (solo hoy)\nSelector día semana (Lun-Dom)" as DiaryFragment <<Container>>
+    
+    rectangle "MonthlyFragment\nCalendario mensual compacto\nAgenda día solo lectura\nPuntitos categoría por día" as MonthlyFragment <<Container>>
+    
+    rectangle "AnalyticsFragment\nCumplimiento semanal histórico\nRacha actual/mejor\nActividad por día (gráfico MPAndroidChart)\nPor categoría" as AnalyticsFragment <<Container>>
+    
+    rectangle "AddTaskActivity\nCrear/editar tarea\nRecurrente (días semana) o Puntual (fecha)\nCategoría → color automático\nHora notificación" as AddTaskActivity <<Container>>
+    
+    rectangle "SettingsActivity\nNotificaciones on/off\nExportar/Importar JSON\nBorrar historial" as SettingsActivity <<Container>>
+    
+    rectangle "TaskViewModel\nState holder (LiveData)\nOrquesta Repository\nExpone: tasks, completions, analytics, monthData" as TaskViewModel <<Container>>
+    
+    rectangle "TaskRepository\nSingle source of truth\nRoom DAOs + Executor (4 hilos)\nAnalytics & MonthData calculados en background\nExport/Import JSON (replace-all + ID mapping)" as TaskRepository <<Container>>
+    
+    rectangle "Room Database\nAppDatabase (v4)\nEntities: Task, DailyCompletion\nDAOs: TaskDao, DailyCompletionDao\nMigraciones 2→3 (drop weekly_analysis)\n          3→4 (add specific_date)" as RoomDatabase <<Container_Db>>
+    
+    rectangle "NotificationScheduler\nAlarmManager exact + AllowWhileIdle\nRequestCode = taskId*10 + dayOfWeek\nPuntual: requestCode = taskId*10 (única)\nBootReceiver reprograma al arranque" as NotificationScheduler <<Container>>
+    
+    rectangle "WorkManager\nCancelación legacy 'weekly_reset'\n(ya no se usa, solo limpieza)" as WorkManager <<Container>>
+}
+
+rectangle "Android Framework" as AndroidFW <<Container_Ext>> {
+    rectangle "AlarmManager\nsetExactAndAllowWhileIdle" as AlarmManager <<Container_Ext>>
+    rectangle "NotificationManager\nCanales, prioridad, actions" as NotificationManager <<Container_Ext>>
+    rectangle "BroadcastReceiver\nBOOT_COMPLETED, Alarm" as BroadcastReceiver <<Container_Ext>>
+}
+
+rectangle "Almacenamiento" as Storage <<Container_Ext>> {
+    rectangle "SQLite (Room)\nrecordweek_database" as SQLite <<Container_Db>>
+    rectangle "SharedPreferences\nSettingsManager (notif on/off)" as SharedPrefs <<Container_Db>>
+    rectangle "Cache Dir\nrecordweek_backup.json (export)" as CacheDir <<Container_Db>>
+}
+
+' Relationships
+User --> MainActivity : "Navega (BottomNav)\nAbre Settings (engranaje)\nAbre AddTask (FAB)"
+
+MainActivity --> DiaryFragment : "replace() nav_diary"
+MainActivity --> MonthlyFragment : "replace() nav_monthly"
+MainActivity --> AnalyticsFragment : "replace() nav_analytics"
+
+DiaryFragment --> TaskViewModel : "observe ActiveTasks\nsetSelectedDay\nsetCompletion"
+MonthlyFragment --> TaskViewModel : "loadMonth(year,month)\nobserve MonthData"
+AnalyticsFragment --> TaskViewModel : "loadAnalytics(weekOffset)\nobserve AnalyticsData"
+AddTaskActivity --> TaskViewModel : "insertTask / updateTask"
+SettingsActivity --> TaskViewModel : "exportData / importData\ndeleteAllCompletions"
+
+TaskViewModel --> TaskRepository : "Todas las operaciones"
+TaskRepository --> RoomDatabase : "DAOs (LiveData + Sync)"
+TaskRepository --> NotificationScheduler : "scheduleTask / cancelTask"
+NotificationScheduler --> AlarmManager : "setExactAndAllowWhileIdle"
+NotificationScheduler --> NotificationManager : "notify (canal recordweek)"
+BroadcastReceiver --> NotificationScheduler : "BootReceiver -> reprograma todo"
+
+RoomDatabase --> SQLite : "Persistencia"
+TaskViewModel --> SharedPrefs : "SettingsManager (notif enabled)"
+SettingsActivity --> SharedPrefs : "Switch notificaciones"
+TaskRepository --> CacheDir : "exportDataAsJson / importDataFromJson"
+
+@enduml

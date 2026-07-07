@@ -1,0 +1,109 @@
+@startuml
+!define RECTANGLE class
+
+skinparam backgroundColor #FAFAFA
+skinparam sequence {
+    ParticipantPadding 20
+    BoxPadding 10
+    LifeLineBackgroundColor #FFFFFF
+    LifeLineBorderColor #999999
+    ActorBackgroundColor #E3F2FD
+    ActorBorderColor #1565C0
+    BoundaryBackgroundColor #FFF3E0
+    BoundaryBorderColor #E65100
+    ControlBackgroundColor #E8F5E9
+    ControlBorderColor #2E7D32
+    EntityBackgroundColor #F3E5F5
+    EntityBorderColor #6A1B9A
+    MessageArrowColor #555555
+    MessageFontSize 12
+    NoteBackgroundColor #FFFFF0
+    NoteBorderColor #F9A825
+}
+
+actor "Android OS" as OS
+boundary "AddTaskActivity\n/ DiaryFragment" as UI
+control "TaskViewModel" as VM
+entity "TaskRepository" as Repo
+control "NotificationScheduler" as Scheduler
+boundary "AlarmManager" as Alarm
+database "Room DB" as DB
+boundary "NotificationReceiver" as Receiver
+boundary "NotificationManager" as NotifMgr
+
+== Crear tarea recurrente ==
+UI -> VM : insertTask(Task{days=[1,3,5], hour=9, minute=0})
+VM -> Repo : insertTask(task, callback)
+Repo -> DB : TaskDao.insert() [background]
+DB --> Repo : newId = 12
+Repo -> Scheduler : scheduleTask(context, task{days=[1,3,5]})
+Scheduler -> Scheduler : isOneOff() -> false (daysOfWeek tiene contenido)
+note over Scheduler, Alarm
+Cada alarma pasa por scheduleExactAlarm():
+si SDK >= 31 y !canScheduleExactAlarms()
+  -> setAndAllowWhileIdle (inexacta, sin permiso)
+si no
+  -> setExactAndAllowWhileIdle (exacta)
+end note
+Scheduler -> Alarm : scheduleExactAlarm\n(requestCode=12*10+1=121,\n trigger=next Monday 9:00)
+Scheduler -> Alarm : scheduleExactAlarm\n(requestCode=12*10+3=123,\n trigger=next Wednesday 9:00)
+Scheduler -> Alarm : scheduleExactAlarm\n(requestCode=12*10+5=125,\n trigger=next Friday 9:00)
+Repo --> VM : callback.onInserted(task)
+VM --> UI : LiveData emite lista actualizada
+
+== Crear tarea puntual (fecha única) ==
+UI -> VM : insertTask(Task{specificDate="2026-07-25", hour=14, minute=30})
+VM -> Repo : insertTask(task, callback)
+Repo -> DB : TaskDao.insert() -> newId=13
+Repo -> Scheduler : scheduleTask(context, task{specificDate="2026-07-25"})
+Scheduler -> Scheduler : isOneOff() -> true
+Scheduler -> Scheduler : getTriggerForDate("2026-07-25", 14, 30)
+Scheduler -> Alarm : scheduleExactAlarm\n(requestCode=13*10=130,\n trigger=2026-07-25 14:30)
+
+note right of Alarm
+La alarma es de UNA sola vez.
+El receiver NO reprograma.
+Si el fecha ya pasó: no se programa.
+end note
+
+== Alarma dispara (Receiver recibe broadcast) ==
+Alarm -> Receiver : onReceive(context, intent)
+Receiver -> Receiver : extra: taskId=12, taskName="Gimnasio", category="Salud"
+Receiver -> NotifMgr : notify(id=12, notification)
+NotifMgr --> OS : muestra notificación en barra
+
+== Reinicio del dispositivo (o APK actualizado) ==
+OS -> Boot : BOOT_COMPLETED / MY_PACKAGE_REPLACED
+Boot -> Boot : goAsync() -> PendingResult
+Boot -> Boot : ExecutorService.execute() [background]
+Boot -> DB : TaskDao.getActiveTasksSync()
+DB --> Boot : List<Task> (solo activas)
+loop cada task activa
+    Boot -> Scheduler : scheduleTask(context, task)
+    note right of Scheduler
+        Para recurrente: reprograma cada día.
+        Para puntual: si la fecha ya pasó, no hace nada.
+    end
+end
+Boot -> Boot : finally { executor.shutdown(); pendingResult.finish() }
+note over Boot
+goAsync() mantiene vivo el proceso hasta
+finish(); el finally garantiza que se llame
+aunque falle la reprogramación.
+end note
+
+== Cancelar tarea ==
+UI -> VM : deleteTask(task{id=12})
+VM -> Repo : deleteTask(task)
+Repo -> Scheduler : cancelTask(context, task)
+Scheduler -> Scheduler : isOneOff()? -> false (recurrente)
+loop cada día en daysOfWeek
+    Scheduler -> Alarm : cancel(PendingIntent\nrequestCode=12*10+day)
+end
+Repo -> DB : TaskDao.delete(task)
+note right of DB\nForeignKey CASCADE\nborra completaciones
+DB --> Repo : OK
+Repo --> VM : void
+VM --> UI : LiveData emite lista sin la tarea
+
+@enduml

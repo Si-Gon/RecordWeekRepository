@@ -1,0 +1,37 @@
+@startuml
+!define RECTANGLE class
+
+skinparam backgroundColor #FAFAFA
+skinparam rectangle {
+    BackgroundColor<<Person>> #E8F4FD
+    BorderColor<<Person>> #1976D2
+    BackgroundColor<<System>> #E8F5E9
+    BorderColor<<System>> #388E3C
+    BackgroundColor<<System_Ext>> #FFF3E0
+    BorderColor<<System_Ext>> #F57C00
+    BackgroundColor<<Container>> #F3E5F5
+    BorderColor<<Container>> #7B1FA2
+    ArrowColor #555555
+    ArrowThickness 1.5
+}
+
+' Actors
+actor "Usuario Final\n(Personas que gestionan\nhábitos y rutinas semanales)" as User <<Person>>
+
+' System Boundary
+rectangle "Record Week\nSistema de tracking de hábitos semanales" as System <<System>> {
+    ' Internal containers will be shown in container diagram
+}
+
+' External Systems
+rectangle "Android OS\n(Sistema operativo, AlarmManager,\nWorkManager, Notificaciones)" as AndroidOS <<System_Ext>>
+rectangle "Google Play Services\n(FCM, Backup, Sync)" as PlayServices <<System_Ext>>
+rectangle "Sistema de Archivos\n(Import/Export JSON)" as FileSystem <<System_Ext>>
+
+' Relationships
+User --> System : "Gestiona tareas\nMarca completadas\nVe analíticas\nConfigura notificaciones"
+System --> AndroidOS : "Programa alarmas exactas\nRecibe BOOT_COMPLETED\nMuestra notificaciones"
+System --> PlayServices : "Backup automático\n(Room auto-backup)"
+System --> FileSystem : "Exporta respaldo JSON\nImporta respaldo JSON"
+
+@enduml

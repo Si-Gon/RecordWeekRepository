@@ -1,19 +1,21 @@
 package com.recordweek.utils;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 
 public class DateUtils {
     private static final String DATE_FORMAT = "yyyy-MM-dd";
-    private static final SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT, Locale.getDefault());
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT, Locale.getDefault());
+    private static final DateTimeFormatter dayMonthFormatter = DateTimeFormatter.ofPattern("dd/MM", Locale.getDefault());
 
-    public static String getTodayString() { return sdf.format(new Date()); }
+    public static String getTodayString() {
+        return LocalDate.now().format(formatter);
+    }
 
     public static int getTodayDayOfWeek() {
-        Calendar cal = Calendar.getInstance();
-        return calendarDayToOurDay(cal.get(Calendar.DAY_OF_WEEK));
+        return LocalDate.now().getDayOfWeek().getValue();
     }
 
     public static int calendarDayToOurDay(int calendarDay) {
@@ -42,49 +44,32 @@ public class DateUtils {
         }
     }
 
-    // ============================================================
-    //  SEMANAS CON OFFSET (para el historico navegable de Analisis)
-    //  weekOffset = 0  -> semana actual
-    //  weekOffset = -1 -> semana pasada
-    //  weekOffset = -2 -> hace dos semanas ... y asi.
-    //  La base es la misma cuenta del lunes actual; luego sumamos
-    //  (offset * 7) dias para movernos de semana en semana.
-    // ============================================================
     public static String getMondayForOffset(int weekOffset) {
-        Calendar cal = Calendar.getInstance();
-        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
-        int daysFromMonday = (dayOfWeek + 5) % 7;
-        cal.add(Calendar.DAY_OF_YEAR, -daysFromMonday + (weekOffset * 7));
-        return sdf.format(cal.getTime());
+        LocalDate today = LocalDate.now();
+        int daysFromMonday = today.getDayOfWeek().getValue() - 1;
+        LocalDate monday = today.minusDays(daysFromMonday).plusWeeks(weekOffset);
+        return monday.format(formatter);
     }
 
     public static String getSundayForOffset(int weekOffset) {
-        Calendar cal = Calendar.getInstance();
-        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
-        int daysFromMonday = (dayOfWeek + 5) % 7;
-        cal.add(Calendar.DAY_OF_YEAR, -daysFromMonday + 6 + (weekOffset * 7));
-        return sdf.format(cal.getTime());
+        LocalDate today = LocalDate.now();
+        int daysFromMonday = today.getDayOfWeek().getValue() - 1;
+        LocalDate sunday = today.minusDays(daysFromMonday).plusWeeks(weekOffset).plusDays(6);
+        return sunday.format(formatter);
     }
 
-    // Devuelve un rango legible "dd/MM - dd/MM" para mostrar la semana elegida.
     public static String getWeekRangeLabel(int weekOffset) {
-        SimpleDateFormat dm = new SimpleDateFormat("dd/MM", Locale.getDefault());
-        try {
-            Date monday = sdf.parse(getMondayForOffset(weekOffset));
-            Date sunday = sdf.parse(getSundayForOffset(weekOffset));
-            return dm.format(monday) + " - " + dm.format(sunday);
-        } catch (Exception e) {
-            return "";
-        }
+        LocalDate today = LocalDate.now();
+        int daysFromMonday = today.getDayOfWeek().getValue() - 1;
+        LocalDate monday = today.minusDays(daysFromMonday).plusWeeks(weekOffset);
+        LocalDate sunday = monday.plusDays(6);
+        return monday.format(dayMonthFormatter) + " - " + sunday.format(dayMonthFormatter);
     }
 
-    // Convierte una fecha "yyyy-MM-dd" a nuestro dia de la semana (Lunes=1..Domingo=7).
-    // Devuelve -1 si la cadena no se puede parsear.
     public static int dateStringToOurDay(String dateStr) {
         try {
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(sdf.parse(dateStr));
-            return calendarDayToOurDay(cal.get(Calendar.DAY_OF_WEEK));
+            LocalDate date = LocalDate.parse(dateStr, formatter);
+            return date.getDayOfWeek().getValue();
         } catch (Exception e) {
             return -1;
         }

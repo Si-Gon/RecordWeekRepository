@@ -1,0 +1,71 @@
+@startuml
+!define RECTANGLE class
+
+skinparam backgroundColor #FAFAFA
+skinparam sequence {
+    ParticipantPadding 20
+    BoxPadding 10
+    LifeLineBackgroundColor #FFFFFF
+    LifeLineBorderColor #999999
+    ActorBackgroundColor #E3F2FD
+    ActorBorderColor #1565C0
+    BoundaryBackgroundColor #FFF3E0
+    BoundaryBorderColor #E65100
+    ControlBackgroundColor #E8F5E9
+    ControlBorderColor #2E7D32
+    EntityBackgroundColor #F3E5F5
+    EntityBorderColor #6A1B9A
+    MessageArrowColor #555555
+    MessageFontSize 12
+    NoteBackgroundColor #FFFFF0
+    NoteBorderColor #F9A825
+}
+
+actor "Usuario" as User
+boundary "AnalyticsFragment" as Analytics
+control "TaskViewModel" as VM
+entity "TaskRepository" as Repo
+database "Room DB\n(TaskDao, CompletionDao)" as DB
+
+== Entrada a Análisis (semana actual, offset=0) ==
+User -> Analytics : Navega pestaña "Análisis" (BottomNav)
+Analytics -> VM : loadAnalytics(0)
+VM -> Repo : loadAnalytics(0, callback)
+Repo -> Repo : executor.execute { ... }
+Repo -> DB : TaskDao.getAllTasksSync()
+DB --> Repo : List<Task> (todas, incl. inactivas)
+Repo -> DB : CompletionDao.getCompletedInRange(lunes, domingo)
+DB --> Repo : List<DailyCompletion> semana
+Repo -> DB : CompletionDao.countCompletedDays(taskId, lunes, cutoff)
+DB --> Repo : int por tarea
+Repo -> DB : CompletionDao.getDistinctCompletedDatesDesc()
+DB --> Repo : List<String> fechas con actividad
+Repo -> Repo : computeStreaks(fechas, data)
+Repo -> Repo : build AnalyticsData (weekScheduled, weekCompleted, weekRate%, currentStreak, bestStreak, totalAllTime, completionsPerWeekday[7], categoryStats)
+Repo --> VM : callback.onLoaded(AnalyticsData)
+VM -> VM : analyticsData.postValue(data) [main thread]
+VM --> Analytics : LiveData emite AnalyticsData
+Analytics -> Analytics : bindSummary(data)
+Analytics -> Analytics : updateBarChart(data) -> MPAndroidChart
+Analytics -> Analytics : updateCategories(data)
+
+== Navegación semana anterior (flecha ‹) ==
+User -> Analytics : Click ‹ (btnWeekPrev)
+Analytics -> Analytics : showWeek(-1)
+Analytics -> VM : loadAnalytics(-1)
+VM -> Repo : loadAnalytics(-1, callback)
+Repo -> Repo : executor.execute { ... }
+note right of Repo
+weekOffset=-1:
+- monday = hace 7 días
+- sunday = ayer
+- cutoffDate = sunday (semana completa ya pasó)
+- cuantas tareas tocaban en esos 7 días (denominador)
+- cuantas completadas (numerador)
+- rachas se calculan sobre TODO el historial
+end note
+Repo --> VM : callback.onLoaded(AnalyticsData)
+VM --> Analytics : LiveData emite nuevo AnalyticsData
+Analytics -> Analytics : bindSummary + updateBarChart + updateCategories
+
+@enduml

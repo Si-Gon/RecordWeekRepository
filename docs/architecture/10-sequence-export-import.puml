@@ -1,0 +1,94 @@
+@startuml
+!define RECTANGLE class
+
+skinparam backgroundColor #FAFAFA
+skinparam sequence {
+    ParticipantPadding 20
+    BoxPadding 10
+    LifeLineBackgroundColor #FFFFFF
+    LifeLineBorderColor #999999
+    ActorBackgroundColor #E3F2FD
+    ActorBorderColor #1565C0
+    BoundaryBackgroundColor #FFF3E0
+    BoundaryBorderColor #E65100
+    ControlBackgroundColor #E8F5E9
+    ControlBorderColor #2E7D32
+    EntityBackgroundColor #F3E5F5
+    EntityBorderColor #6A1B9A
+    MessageArrowColor #555555
+    MessageFontSize 12
+    NoteBackgroundColor #FFFFF0
+    NoteBorderColor #F9A825
+}
+
+actor "Usuario" as User
+boundary "SettingsActivity" as Settings
+control "TaskViewModel" as VM
+entity "TaskRepository" as Repo
+database "Room DB\n(TaskDao, CompletionDao)" as DB
+boundary "Android\nIntent (Share)" as Intent
+
+== Exportar datos ==
+User -> Settings : Click "Exportar datos"
+Settings -> Settings : Toast "Preparando exportación..."
+Settings -> VM : exportData(callback)
+VM -> Repo : exportDataAsJson(callback)
+Repo -> Repo : executor.execute { ... }
+Repo -> DB : TaskDao.getAllTasksSync()
+DB --> Repo : List<Task>
+loop cada task
+    Repo -> Repo : JSONObject.put(name,color,category,description,daysOfWeek,specificDate,hour,minute,active)
+end
+Repo -> DB : CompletionDao.getAllSync()
+DB --> Repo : List<DailyCompletion>
+loop cada completion
+    Repo -> Repo : JSONObject.put(taskId,date,completed)
+end
+Repo -> Repo : json = root.toString(2) (pretty print)
+Repo --> VM : callback.onReady(json)
+VM --> Settings : callback en main thread
+Settings -> Settings : shareJsonAsFile(json)
+Settings -> Settings : escribe en cacheDir/recordweek_backup.json
+Settings -> Intent : Intent.ACTION_SEND + FileProvider URI
+Intent --> User : chooser "Exportar datos" (Drive, correo, etc.)
+
+== Importar datos ==
+User -> Settings : Click "Importar datos"
+Settings -> Settings : openFileLauncher.launch(["application/json","*/*"])
+Settings --> User : selector de archivos del sistema
+User -> Settings : elige archivo .json
+Settings -> Settings : confirmImport(uri)
+note right of Settings\nREEMPLAZAR TODO\n"Esto reemplazará todas\ntus tareas e historial\nactuales por los del\narchivo. No se puede\ndeshacer."
+User -> Settings : Click "Importar"
+Settings -> Settings : lee InputStream del URI -> StringBuilder
+Settings -> VM : importData(jsonString, callback)
+VM -> Repo : importDataFromJson(json, callback)
+Repo -> Repo : executor.execute { ... }
+Repo -> Repo : root = JSONObject(json)
+Repo -> Repo : validate root.has("tasks")
+
+note right of Repo\nEstrategia "reemplazar todo"\n+ Mapa de IDs
+
+Repo -> DB : TaskDao.deleteAll()
+note right of DB\nForeignKey CASCADE\nborra también completaciones
+
+loop cada task en tasksArr
+    Repo -> Repo : extrae: name, color, category, description, daysOfWeek, specificDate, hour, minute, active
+    Repo -> Repo : Task t = new Task(...)
+    Repo -> DB : TaskDao.insert(t) -> newId
+    Repo -> Repo : idMap.put(oldId, newId)
+end
+
+loop cada completion en completionsArr
+    Repo -> Repo : oldTaskId = o.optInt("taskId")
+    Repo -> Repo : newTaskId = idMap.get(oldTaskId)
+    note right of Repo\nSi newTaskId es null\n(huérfana) -> SKIP
+    Repo -> Repo : DailyCompletion dc = new DailyCompletion(newTaskId, date, completed)
+    Repo -> DB : CompletionDao.insert(dc)
+end
+
+Repo --> VM : callback.onFinished(true, "Importación completa", nTasks, nComps)
+VM --> Settings : callback en main thread
+Settings -> User : Toast "Importado: X tareas, Y completaciones"
+
+@enduml

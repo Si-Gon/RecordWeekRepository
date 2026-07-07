@@ -1,0 +1,66 @@
+@startuml
+!define RECTANGLE class
+
+skinparam backgroundColor #FAFAFA
+skinparam node {
+    BackgroundColor<<Device>> #E3F2FD
+    BorderColor<<Device>> #1565C0
+    BackgroundColor<<App>> #E8F5E9
+    BorderColor<<App>> #2E7D32
+    BackgroundColor<<Artifact>> #FFF3E0
+    BorderColor<<Artifact>> #E65100
+    BackgroundColor<<Storage>> #F3E5F5
+    BorderColor<<Storage>> #6A1B9A
+    ArrowColor #555555
+    ArrowThickness 1.5
+}
+
+node "Dispositivo Android\n(Minimum API 29, Target API 34)" as Device <<Device>> {
+    node "recordWeek App\n(com.recordweek)" as App <<App>> {
+        artifact "app-debug.apk\n(versionCode 5, v2.0)" as APK <<Artifact>>
+        
+        rectangle "Proceso principal" as Process {
+            artifact "MainActivity\n(Host + BottomNav)" as MainAct
+            artifact "Fragments\n(Diary/Monthly/Analytics)" as Fragments
+            artifact "ViewModel\n(TaskViewModel)" as ViewModel
+            artifact "Repository\n(TaskRepository)" as Repository
+        }
+        
+        rectangle "Servicios en background" as Services {
+            artifact "NotificationScheduler\n(AlarmManager exact)" as Scheduler
+            artifact "NotificationReceiver\n(BroadcastReceiver)" as Receiver
+            artifact "BootReceiver\n(BroadcastReceiver)" as Boot
+        }
+    }
+    
+    node "Almacenamiento" as Store <<Storage>> {
+        database "SQLite\n(recordweek_database)" as SQLite
+        database "SharedPreferences\n(SettingsManager)" as Prefs
+        database "Cache Dir\n(recordweek_backup.json)" as Cache
+    }
+    
+    node "Android Framework" as Framework {
+        artifact "AlarmManager" as Alarm
+        artifact "NotificationManager" as NotifManager
+        artifact "WorkManager (legacy)" as Work
+    }
+}
+
+node "Google Play Store" as GPlay {
+    database "Room Auto-Backup" as Backup
+}
+
+' Deployment relationships
+App --> SQLite : "Room DB\nv4, migraciones\n2->3, 3->4"
+App --> Prefs : "config\nnotifications"
+App --> Cache : "export/import"
+
+Process --> Store : "lee/escribe"
+Scheduler --> Alarm : "setExactAndAllowWhileIdle"
+Receiver --> NotifManager : "showNotification"
+Boot --> Scheduler : "rescheduleAll"
+
+GPlay ..> App : "instala APK"
+GPlay ..> Backup : "backup automático"
+
+@enduml

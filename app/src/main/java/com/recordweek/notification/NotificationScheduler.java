@@ -4,6 +4,7 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import com.recordweek.data.Task;
 import com.recordweek.utils.DateUtils;
 import org.json.JSONArray;
@@ -33,7 +34,7 @@ public class NotificationScheduler {
             int requestCode = task.id * 10;
             PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
+            scheduleExactAlarm(alarmManager, triggerTime, pendingIntent);
             return;
         }
 
@@ -50,7 +51,7 @@ public class NotificationScheduler {
                 int requestCode = task.id * 10 + dayOfWeek;
                 PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent,
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
+                scheduleExactAlarm(alarmManager, triggerTime, pendingIntent);
             }
         } catch (JSONException e) { e.printStackTrace(); }
     }
@@ -81,6 +82,15 @@ public class NotificationScheduler {
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent,
             PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_IMMUTABLE);
         if (pendingIntent != null) { alarmManager.cancel(pendingIntent); pendingIntent.cancel(); }
+    }
+
+    // API 31+: si el usuario revoco SCHEDULE_EXACT_ALARM, cae a setAndAllowWhileIdle (inexacta).
+    private static void scheduleExactAlarm(AlarmManager alarmManager, long triggerTime, PendingIntent pendingIntent) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
+        } else {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
+        }
     }
 
     // Momento exacto (millis) de una fecha "yyyy-MM-dd" a la hora dada. Si la fecha
