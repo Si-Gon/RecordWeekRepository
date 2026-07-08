@@ -24,16 +24,26 @@ import java.util.concurrent.Executors;
 public class TaskRepository {
     private final TaskDao taskDao;
     private final DailyCompletionDao completionDao;
-    private final ExecutorService executor = Executors.newFixedThreadPool(4);
+    private final ExecutorService executor;
     private final LiveData<List<Task>> allTasks;
     private final LiveData<List<Task>> activeTasks;
 
     public TaskRepository(Application application) {
         AppDatabase db = AppDatabase.getInstance(application);
-        taskDao = db.taskDao();
-        completionDao = db.dailyCompletionDao();
-        allTasks = taskDao.getAllTasks();
-        activeTasks = taskDao.getActiveTasks();
+        this.taskDao = db.taskDao();
+        this.completionDao = db.dailyCompletionDao();
+        this.executor = Executors.newFixedThreadPool(4);
+        this.allTasks = this.taskDao.getAllTasks();
+        this.activeTasks = this.taskDao.getActiveTasks();
+    }
+
+    // Constructor package-private para tests — inyecta DAOs directamente sin abrir BD
+    TaskRepository(TaskDao taskDao, DailyCompletionDao completionDao) {
+        this.taskDao = taskDao;
+        this.completionDao = completionDao;
+        this.executor = Executors.newSingleThreadExecutor();
+        this.allTasks = this.taskDao.getAllTasks();
+        this.activeTasks = this.taskDao.getActiveTasks();
     }
 
     public LiveData<List<Task>> getAllTasks() { return allTasks; }
@@ -208,7 +218,7 @@ public class TaskRepository {
     //   - Puntual: suma 1 solo si su fecha exacta cae en ese tramo transcurrido.
     // Al iterar por FECHAS reales (no por numeros de dia sueltos) el mismo bucle
     // sirve para ambos, y ya no hace falta parsear el JSON aqui.
-    private int countScheduledInElapsedWeek(Task task, String monday, String cutoffDate) {
+    int countScheduledInElapsedWeek(Task task, String monday, String cutoffDate) {
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         Calendar cal = Calendar.getInstance();
         try {

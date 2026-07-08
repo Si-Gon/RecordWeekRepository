@@ -210,17 +210,21 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         }
 
         private int resolveTaskColor(String colorName) {
-            if (colorName == null) return Color.parseColor("#E0922F");
-            switch (colorName) {
-                case "RED": return Color.parseColor("#EF5350");
-                case "ORANGE": return Color.parseColor("#FFA726");
-                case "YELLOW": return Color.parseColor("#FFEE58");
-                case "GREEN": return Color.parseColor("#66BB6A");
-                case "BLUE": return Color.parseColor("#5B8DEF");
-                case "PURPLE": return Color.parseColor("#AB47BC");
-                case "PINK": return Color.parseColor("#EC407A");
-                default: return Color.parseColor("#E0922F");
-            }
+            return TaskAdapter.resolveTaskColorStatic(colorName);
+        }
+    }
+
+    static int resolveTaskColorStatic(String colorName) {
+        if (colorName == null) return 0xFFE0922F;
+        switch (colorName) {
+            case "RED": return 0xFFEF5350;
+            case "ORANGE": return 0xFFFFA726;
+            case "YELLOW": return 0xFFFFEE58;
+            case "GREEN": return 0xFF66BB6A;
+            case "BLUE": return 0xFF5B8DEF;
+            case "PURPLE": return 0xFFAB47BC;
+            case "PINK": return 0xFFEC407A;
+            default: return 0xFFE0922F;
         }
     }
 }

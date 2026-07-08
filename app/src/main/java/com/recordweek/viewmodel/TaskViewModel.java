@@ -24,6 +24,14 @@ public class TaskViewModel extends AndroidViewModel {
         allTasks = repository.getAllTasks();
     }
 
+    // Constructor package-private para tests — inyecta Repository mockeado
+    // El Application es null solo en tests; getApplication() no se usa en esos paths.
+    TaskViewModel(@NonNull Application application, TaskRepository repository) {
+        super(application);
+        this.repository = repository;
+        this.allTasks = repository.getAllTasks();
+    }
+
     public LiveData<List<Task>> getAllTasks() { return allTasks; }
     public LiveData<List<Task>> getActiveTasks() { return repository.getActiveTasks(); }
     public void insertTask(Task task, TaskRepository.OnTaskInsertedCallback callback) { repository.insertTask(task, callback); }

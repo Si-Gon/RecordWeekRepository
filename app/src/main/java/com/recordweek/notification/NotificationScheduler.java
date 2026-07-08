@@ -85,7 +85,7 @@ public class NotificationScheduler {
     }
 
     // API 31+: si el usuario revoco SCHEDULE_EXACT_ALARM, cae a setAndAllowWhileIdle (inexacta).
-    private static void scheduleExactAlarm(AlarmManager alarmManager, long triggerTime, PendingIntent pendingIntent) {
+    static void scheduleExactAlarm(AlarmManager alarmManager, long triggerTime, PendingIntent pendingIntent) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
             alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
         } else {
@@ -95,7 +95,7 @@ public class NotificationScheduler {
 
     // Momento exacto (millis) de una fecha "yyyy-MM-dd" a la hora dada. Si la fecha
     // no se puede leer, devolvemos 0 -> el llamador lo interpreta como "ya paso".
-    private static long getTriggerForDate(String date, int hour, int minute) {
+    static long getTriggerForDate(String date, int hour, int minute) {
         try {
             Calendar cal = Calendar.getInstance();
             cal.setTime(new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).parse(date));
@@ -109,7 +109,7 @@ public class NotificationScheduler {
         }
     }
 
-    private static long getNextTriggerTime(int dayOfWeek, int hour, int minute) {
+    static long getNextTriggerTime(int dayOfWeek, int hour, int minute) {
         int calendarDay = DateUtils.ourDayToCalendarDay(dayOfWeek);
         Calendar now = Calendar.getInstance();
         Calendar trigger = Calendar.getInstance();
