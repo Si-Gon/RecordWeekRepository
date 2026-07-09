@@ -43,17 +43,49 @@ public class NotificationScheduler {
             JSONArray daysArray = new JSONArray(task.daysOfWeek);
             for (int i = 0; i < daysArray.length(); i++) {
                 int dayOfWeek = daysArray.getInt(i);
-                long triggerTime = getNextTriggerTime(dayOfWeek, task.notificationHour, task.notificationMinute);
-                Intent intent = new Intent(context, NotificationReceiver.class);
-                intent.putExtra(NotificationReceiver.EXTRA_TASK_ID, task.id);
-                intent.putExtra(NotificationReceiver.EXTRA_TASK_NAME, task.name);
-                intent.putExtra(NotificationReceiver.EXTRA_TASK_CATEGORY, task.category);
-                int requestCode = task.id * 10 + dayOfWeek;
-                PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-                scheduleExactAlarm(alarmManager, triggerTime, pendingIntent);
+                scheduleRecurringDay(context, alarmManager, task.id, task.name, task.category,
+                    dayOfWeek, task.notificationHour, task.notificationMinute);
             }
         } catch (JSONException e) { e.printStackTrace(); }
+    }
+
+    // Arma (o reprograma) la alarma de UN dia recurrente concreto. Se usa en dos
+    // momentos: al crear/editar la tarea (bucle de arriba) y desde el receiver para
+    // dejar lista la alarma de la SEMANA SIGUIENTE. Por que hace falta reprogramar:
+    // scheduleExactAlarm usa setExact..., que es de UN SOLO DISPARO; sin volver a
+    // programar, un recordatorio "semanal" sonaria una vez y nunca mas.
+    //
+    // El requestCode (id*10 + dia) es el MISMO que al crear la alarma, asi que con
+    // FLAG_UPDATE_CURRENT simplemente pisamos la ranura de ese dia (no se duplican).
+    // Metemos dia/hora/minuto como extras para que el receiver tenga todo lo que
+    // necesita para reprogramarse solo, sin volver a tocar la base de datos.
+    static void scheduleRecurringDay(Context context, AlarmManager alarmManager,
+            int taskId, String taskName, String taskCategory,
+            int dayOfWeek, int hour, int minute) {
+        long triggerTime = getNextTriggerTime(dayOfWeek, hour, minute);
+        Intent intent = new Intent(context, NotificationReceiver.class);
+        intent.putExtra(NotificationReceiver.EXTRA_TASK_ID, taskId);
+        intent.putExtra(NotificationReceiver.EXTRA_TASK_NAME, taskName);
+        intent.putExtra(NotificationReceiver.EXTRA_TASK_CATEGORY, taskCategory);
+        intent.putExtra(NotificationReceiver.EXTRA_DAY_OF_WEEK, dayOfWeek);
+        intent.putExtra(NotificationReceiver.EXTRA_HOUR, hour);
+        intent.putExtra(NotificationReceiver.EXTRA_MINUTE, minute);
+        int requestCode = taskId * 10 + dayOfWeek;
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        scheduleExactAlarm(alarmManager, triggerTime, pendingIntent);
+    }
+
+    // Version comoda para el receiver: consigue el AlarmManager por su cuenta y
+    // delega en scheduleRecurringDay. getNextTriggerTime, al ejecutarse justo
+    // despues de que la alarma sono hoy, ve que la hora de hoy ya paso y devuelve
+    // la ocurrencia de la proxima semana. Asi la cadena semanal se mantiene viva.
+    static void rescheduleNextWeek(Context context, int taskId, String taskName,
+            String taskCategory, int dayOfWeek, int hour, int minute) {
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager == null) return;
+        scheduleRecurringDay(context, alarmManager, taskId, taskName, taskCategory,
+            dayOfWeek, hour, minute);
     }
 
     public static void cancelTask(Context context, Task task) {
@@ -95,18 +127,14 @@ public class NotificationScheduler {
 
     // Momento exacto (millis) de una fecha "yyyy-MM-dd" a la hora dada. Si la fecha
     // no se puede leer, devolvemos 0 -> el llamador lo interpreta como "ya paso".
+    // Usamos DateUtils.stringToCalendar (mismo parser que el resto de la app); ya
+    // deja SECOND/MILLISECOND en cero (hace clear()), asi que solo fijamos hora y minuto.
     static long getTriggerForDate(String date, int hour, int minute) {
-        try {
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).parse(date));
-            cal.set(Calendar.HOUR_OF_DAY, hour);
-            cal.set(Calendar.MINUTE, minute);
-            cal.set(Calendar.SECOND, 0);
-            cal.set(Calendar.MILLISECOND, 0);
-            return cal.getTimeInMillis();
-        } catch (Exception e) {
-            return 0;
-        }
+        Calendar cal = DateUtils.stringToCalendar(date);
+        if (cal == null) return 0;
+        cal.set(Calendar.HOUR_OF_DAY, hour);
+        cal.set(Calendar.MINUTE, minute);
+        return cal.getTimeInMillis();
     }
 
     static long getNextTriggerTime(int dayOfWeek, int hour, int minute) {
