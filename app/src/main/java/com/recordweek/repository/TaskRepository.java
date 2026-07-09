@@ -10,12 +10,10 @@ import com.recordweek.data.MonthData;
 import com.recordweek.data.Task;
 import com.recordweek.data.TaskDao;
 import com.recordweek.utils.DateUtils;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -71,10 +69,6 @@ public class TaskRepository {
         executor.execute(() -> completionDao.insert(completion));
     }
 
-    public LiveData<DailyCompletion> getCompletionLive(int taskId, String date) {
-        return completionDao.getCompletionLive(taskId, date);
-    }
-
     public LiveData<List<DailyCompletion>> getCompletionsByDate(String date) {
         return completionDao.getCompletionsByDate(date);
     }
@@ -86,11 +80,6 @@ public class TaskRepository {
     //  leyendo directamente del historial de completaciones.
     //  Se ejecuta en un hilo de fondo (executor) porque toca la BD.
     // ============================================================
-    // Compatibilidad: la llamada sin offset equivale a "semana actual" (offset 0).
-    public void loadAnalytics(OnAnalyticsLoadedCallback callback) {
-        loadAnalytics(0, callback);
-    }
-
     public void loadAnalytics(int weekOffset, OnAnalyticsLoadedCallback callback) {
         executor.execute(() -> {
             AnalyticsData data = new AnalyticsData();
@@ -172,11 +161,10 @@ public class TaskRepository {
             cal.clear();
             cal.set(year, monthZeroBased, 1);
             int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
-            SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
-            String firstDay = fmt.format(cal.getTime());
+            String firstDay = DateUtils.calendarToString(cal);
             cal.set(Calendar.DAY_OF_MONTH, daysInMonth);
-            String lastDay = fmt.format(cal.getTime());
+            String lastDay = DateUtils.calendarToString(cal);
 
             // 3) Completaciones marcadas del mes -> Set de claves "taskId|fecha".
             //    Reutilizamos getCompletedInRange (ya usado por Analytics).
@@ -191,7 +179,7 @@ public class TaskRepository {
             String todayStr = DateUtils.getTodayString();
             for (int d = 1; d <= daysInMonth; d++) {
                 cal.set(Calendar.DAY_OF_MONTH, d);
-                String dateStr = fmt.format(cal.getTime());
+                String dateStr = DateUtils.calendarToString(cal);
                 if (dateStr.compareTo(todayStr) > 0) break; // formato yyyy-MM-dd ordena como texto
                 int ourDay = DateUtils.dateStringToOurDay(dateStr); // Lunes=1..Domingo=7
                 for (Task t : data.activeTasks) {
@@ -219,16 +207,11 @@ public class TaskRepository {
     // Al iterar por FECHAS reales (no por numeros de dia sueltos) el mismo bucle
     // sirve para ambos, y ya no hace falta parsear el JSON aqui.
     int countScheduledInElapsedWeek(Task task, String monday, String cutoffDate) {
-        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        Calendar cal = Calendar.getInstance();
-        try {
-            cal.setTime(fmt.parse(monday));
-        } catch (Exception e) {
-            return 0;
-        }
+        Calendar cal = DateUtils.stringToCalendar(monday);
+        if (cal == null) return 0;
         int count = 0;
         for (int i = 0; i < 7; i++) { // como mucho, los 7 dias de la semana
-            String dateStr = fmt.format(cal.getTime());
+            String dateStr = DateUtils.calendarToString(cal);
             if (dateStr.compareTo(cutoffDate) > 0) break; // ya pasamos el corte
             int ourDay = DateUtils.calendarDayToOurDay(cal.get(Calendar.DAY_OF_WEEK));
             if (task.occursOn(dateStr, ourDay)) count++;
@@ -247,16 +230,15 @@ public class TaskRepository {
             return;
         }
         Set<String> dateSet = new HashSet<>(datesDesc);
-        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
         // Racha actual: empezamos en hoy; si hoy no hay, probamos ayer.
         int current = 0;
         Calendar cursor = Calendar.getInstance();
-        String todayStr = fmt.format(cursor.getTime());
+        String todayStr = DateUtils.calendarToString(cursor);
         if (!dateSet.contains(todayStr)) {
             cursor.add(Calendar.DAY_OF_YEAR, -1); // si hoy no, arrancamos desde ayer
         }
-        while (dateSet.contains(fmt.format(cursor.getTime()))) {
+        while (dateSet.contains(DateUtils.calendarToString(cursor))) {
             current++;
             cursor.add(Calendar.DAY_OF_YEAR, -1);
         }
@@ -266,22 +248,18 @@ public class TaskRepository {
         // el tramo consecutivo mas largo. datesDesc viene de mas reciente a mas
         // antigua; comparamos cada fecha con la anterior para ver si son contiguas.
         int best = 1, run = 1;
-        try {
-            for (int i = 1; i < datesDesc.size(); i++) {
-                Calendar prev = Calendar.getInstance();
-                prev.setTime(fmt.parse(datesDesc.get(i - 1)));
-                Calendar curr = Calendar.getInstance();
-                curr.setTime(fmt.parse(datesDesc.get(i)));
-                prev.add(Calendar.DAY_OF_YEAR, -1); // la anterior menos un dia
-                if (sameDay(prev, curr)) {
-                    run++;
-                } else {
-                    run = 1;
-                }
-                if (run > best) best = run;
+        for (int i = 1; i < datesDesc.size(); i++) {
+            Calendar prev = DateUtils.stringToCalendar(datesDesc.get(i - 1));
+            Calendar curr = DateUtils.stringToCalendar(datesDesc.get(i));
+            // Fecha ilegible (dato corrupto): cortamos la racha y seguimos.
+            if (prev == null || curr == null) { run = 1; continue; }
+            prev.add(Calendar.DAY_OF_YEAR, -1); // la anterior menos un dia
+            if (sameDay(prev, curr)) {
+                run++;
+            } else {
+                run = 1;
             }
-        } catch (Exception e) {
-            best = Math.max(best, current);
+            if (run > best) best = run;
         }
         data.bestStreak = Math.max(best, current);
     }

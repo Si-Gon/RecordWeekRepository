@@ -23,11 +23,9 @@ import com.recordweek.utils.DateUtils;
 import com.recordweek.viewmodel.TaskViewModel;
 import org.json.JSONArray;
 import org.json.JSONException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
 
 // ============================================================
 //  DiaryFragment: la vista DIARIO como Fragment (antes era MainActivity).
@@ -151,7 +149,7 @@ public class DiaryFragment extends Fragment {
         if (day == todayDay) return todayDate;
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_YEAR, day - todayDay);
-        return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
+        return DateUtils.calendarToString(cal);
     }
 
     private void setupViewModel() {

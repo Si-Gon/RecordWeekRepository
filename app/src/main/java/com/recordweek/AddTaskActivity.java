@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import com.recordweek.data.Task;
 import com.recordweek.notification.NotificationScheduler;
+import com.recordweek.utils.CardStyle;
 import com.recordweek.utils.DateUtils;
 import com.recordweek.viewmodel.TaskViewModel;
 import org.json.JSONArray;
@@ -58,23 +59,6 @@ public class AddTaskActivity extends AppCompatActivity {
             if (CATEGORIES[i].equals(category)) return CATEGORY_COLORS[i];
         }
         return "PURPLE";
-    }
-
-    // Traduce el nombre interno del color ("RED", "BLUE"...) al recurso de color real
-    // (R.color.task_red...). Es el mismo mapeo que ya usa la lista de tareas, centralizado
-    // aqui para pintar el punto indicador junto al selector de categoria.
-    private static int colorResForName(String name) {
-        if (name == null) return R.color.task_purple;
-        switch (name) {
-            case "RED":    return R.color.task_red;
-            case "ORANGE": return R.color.task_orange;
-            case "YELLOW": return R.color.task_yellow;
-            case "GREEN":  return R.color.task_green;
-            case "BLUE":   return R.color.task_blue;
-            case "PINK":   return R.color.task_pink;
-            case "PURPLE":
-            default:       return R.color.task_purple;
-        }
     }
 
     @Override
@@ -125,9 +109,10 @@ public class AddTaskActivity extends AppCompatActivity {
 
     // Tinta el punto indicador con el color de la categoria dada. Usamos un solo
     // drawable (bg_category_dot) y le cambiamos el tinte, en vez de tener 7 drawables.
+    // CardStyle.taskColor devuelve directamente el ARGB del color (mismo valor que el
+    // recurso R.color.task_*), asi que ya no necesitamos el mapa a R.color de antes.
     private void updateCategoryColorDot(String category) {
-        int colorRes = colorResForName(colorForCategory(category));
-        viewCategoryColor.getBackground().mutate().setTint(getColor(colorRes));
+        viewCategoryColor.getBackground().mutate().setTint(CardStyle.taskColor(colorForCategory(category)));
     }
 
     private void setupDaySelector() {

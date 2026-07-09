@@ -78,4 +78,28 @@ public class DateUtils {
     public static String formatTime(int hour, int minute) {
         return String.format(Locale.getDefault(), "%02d:%02d", hour, minute);
     }
+
+    // Calendar -> "yyyy-MM-dd". Reemplaza a SimpleDateFormat, que NO es thread-safe:
+    // el repository usa un pool de 4 hilos y compartir un SimpleDateFormat entre ellos
+    // puede producir fechas corruptas. Aqui construimos el string a mano con String.format,
+    // que es inmutable y seguro entre hilos. Calendar.MONTH es 0-based, por eso el +1.
+    public static String calendarToString(Calendar cal) {
+        return String.format(Locale.getDefault(), "%04d-%02d-%02d",
+            cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
+    }
+
+    // "yyyy-MM-dd" -> Calendar. Igual que arriba, sustituye a SimpleDateFormat.parse().
+    // clear() deja el Calendar en cero (medianoche, sin arrastrar hora/minuto actuales).
+    // Devuelve null si el string no tiene el formato esperado (el llamador debe cubrirlo).
+    public static Calendar stringToCalendar(String dateStr) {
+        try {
+            String[] p = dateStr.split("-");
+            Calendar cal = Calendar.getInstance();
+            cal.clear();
+            cal.set(Integer.parseInt(p[0]), Integer.parseInt(p[1]) - 1, Integer.parseInt(p[2]));
+            return cal;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

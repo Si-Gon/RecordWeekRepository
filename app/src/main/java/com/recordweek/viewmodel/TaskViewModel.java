@@ -47,14 +47,12 @@ public class TaskViewModel extends AndroidViewModel {
         repository.upsertCompletion(dc);
     }
 
-    public LiveData<DailyCompletion> getCompletionLive(int taskId, String date) { return repository.getCompletionLive(taskId, date); }
     public LiveData<List<DailyCompletion>> getCompletionsByDate(String date) { return repository.getCompletionsByDate(date); }
 
     // Analytics nuevo: dispara el calculo en el repository (hilo de fondo) y publica
     // el resultado en un LiveData que la Activity observa. postValue porque venimos
     // de un hilo que NO es el principal.
     public LiveData<AnalyticsData> getAnalyticsData() { return analyticsData; }
-    public void loadAnalytics() { loadAnalytics(0); }
 
     // weekOffset: 0 = semana actual, -1 = pasada, -2 = antepasada...
     public void loadAnalytics(int weekOffset) {

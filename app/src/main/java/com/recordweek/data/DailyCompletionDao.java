@@ -11,8 +11,6 @@ import java.util.List;
 public interface DailyCompletionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(DailyCompletion completion);
-    @Query("SELECT * FROM daily_completions WHERE task_id = :taskId AND date = :date LIMIT 1")
-    LiveData<DailyCompletion> getCompletionLive(int taskId, String date);
     @Query("SELECT COUNT(*) FROM daily_completions WHERE task_id = :taskId AND date >= :startDate AND date <= :endDate AND completed = 1")
     int countCompletedDays(int taskId, String startDate, String endDate);
     @Query("DELETE FROM daily_completions")

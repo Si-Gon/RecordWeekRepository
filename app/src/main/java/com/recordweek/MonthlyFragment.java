@@ -1,9 +1,7 @@
 package com.recordweek;
 
 import android.app.Activity;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,11 +9,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.graphics.ColorUtils;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import com.recordweek.data.MonthData;
 import com.recordweek.data.Task;
+import com.recordweek.utils.CardStyle;
 import com.recordweek.utils.DateUtils;
 import com.recordweek.viewmodel.TaskViewModel;
 import java.util.ArrayList;
@@ -236,7 +234,7 @@ public class MonthlyFragment extends Fragment {
 
         Set<Integer> colors = new LinkedHashSet<>();
         for (Task t : monthData.activeTasks) {
-            if (t.occursOn(dateStr, ourDay)) colors.add(resolveTaskColor(t.color));
+            if (t.occursOn(dateStr, ourDay)) colors.add(CardStyle.taskColor(t.color));
         }
 
         float density = getResources().getDisplayMetrics().density;
@@ -271,8 +269,7 @@ public class MonthlyFragment extends Fragment {
         Calendar cal = Calendar.getInstance();
         cal.clear();
         cal.set(currentYear, currentMonth, selectedDay);
-        String dateStr = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            .format(cal.getTime());
+        String dateStr = DateUtils.calendarToString(cal);
         int ourDay = DateUtils.calendarDayToOurDay(cal.get(Calendar.DAY_OF_WEEK));
 
         // Cabecera del dia: "Miercoles 18 de junio".
@@ -321,11 +318,11 @@ public class MonthlyFragment extends Fragment {
         View node = card.findViewById(R.id.agenda_node);
         LinearLayout body = card.findViewById(R.id.agenda_card);
 
-        int accent = resolveTaskColor(task.color);
+        int accent = CardStyle.taskColor(task.color);
         hour.setText(DateUtils.formatTime(task.notificationHour, task.notificationMinute));
         name.setText(task.name);
         category.setText(task.category);
-        body.setBackground(buildCardBackground(accent));
+        body.setBackground(CardStyle.cardBackground(requireContext(), accent));
 
         // Estado de SOLO LECTURA: hecha (ambar, con check) o pendiente (gris).
         if (isDone) {
@@ -363,50 +360,9 @@ public class MonthlyFragment extends Fragment {
         return circle;
     }
 
-    // Igual que TaskAdapter.buildCardBackground: tarjeta redondeada con tinte 8%
-    // de la categoria en el tercio izquierdo + borde tenue + acento de 4dp.
-    private android.graphics.drawable.Drawable buildCardBackground(int accentColor) {
-        float density = getResources().getDisplayMetrics().density;
-        float corner = 12 * density;
-        int stroke = Math.round(1 * density);
-        int accentWidth = Math.round(4 * density);
-
-        int surface = Color.parseColor("#121A2E"); // surface_elevated
-        int tint = ColorUtils.blendARGB(surface, accentColor, 0.08f);
-
-        android.graphics.drawable.GradientDrawable cardBg =
-            new android.graphics.drawable.GradientDrawable(
-                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
-                new int[]{ tint, surface, surface });
-        cardBg.setCornerRadius(corner);
-        cardBg.setStroke(stroke, Color.parseColor("#232C40"));
-
-        android.graphics.drawable.GradientDrawable accent =
-            new android.graphics.drawable.GradientDrawable();
-        accent.setColor(accentColor);
-        accent.setCornerRadii(new float[]{ corner, corner, 0, 0, 0, 0, corner, corner });
-
-        android.graphics.drawable.LayerDrawable layers =
-            new android.graphics.drawable.LayerDrawable(
-                new android.graphics.drawable.Drawable[]{ cardBg, accent });
-        layers.setLayerWidth(1, accentWidth);
-        layers.setLayerGravity(1, Gravity.START);
-        return layers;
-    }
-
-    private int resolveTaskColor(String colorName) {
-        if (colorName == null) return Color.parseColor("#E0922F");
-        switch (colorName) {
-            case "RED": return Color.parseColor("#EF5350");
-            case "ORANGE": return Color.parseColor("#FFA726");
-            case "YELLOW": return Color.parseColor("#FFEE58");
-            case "GREEN": return Color.parseColor("#66BB6A");
-            case "BLUE": return Color.parseColor("#5B8DEF");
-            case "PURPLE": return Color.parseColor("#AB47BC");
-            case "PINK": return Color.parseColor("#EC407A");
-            default: return Color.parseColor("#E0922F");
-        }
-    }
+    // El fondo de la tarjeta y el mapeo de color por categoria ahora viven en
+    // CardStyle (utils), compartidos con TaskAdapter. Ver CardStyle.cardBackground
+    // y CardStyle.taskColor.
 
     // La decision de "¿esta tarea ocurre este dia?" vive en Task.occursOn(), que
     // unifica recurrentes (por dia de semana) y puntuales (por fecha exacta).
@@ -425,6 +381,6 @@ public class MonthlyFragment extends Fragment {
         Calendar cal = Calendar.getInstance();
         cal.clear();
         cal.set(currentYear, currentMonth, dayNumber);
-        return new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
+        return DateUtils.calendarToString(cal);
     }
 }
