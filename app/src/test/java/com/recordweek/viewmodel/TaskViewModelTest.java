@@ -2,6 +2,8 @@ package com.recordweek.viewmodel;
 
 import android.app.Application;
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
+
 import com.recordweek.data.AnalyticsData;
 import com.recordweek.data.DailyCompletion;
 import com.recordweek.data.MonthData;
@@ -9,6 +11,7 @@ import com.recordweek.data.Task;
 import com.recordweek.repository.TaskRepository;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -23,6 +26,9 @@ import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TaskViewModelTest {
+
+    @Rule
+    public InstantTaskExecutorRule instantTaskExecutorRule = new InstantTaskExecutorRule();
 
     @Mock
     Application application;
@@ -60,20 +66,22 @@ public class TaskViewModelTest {
     }
 
     @Test
-    public void loadAnalytics_loadingStates() throws Exception {
+    public void loadAnalytics_loadingStates() {
+        // Capturamos isLoading DENTRO del callback: ese es el unico instante
+        // en que la carga esta "en progreso". Con un mock sincrono el estado
+        // intermedio se colapsa contra el final, asi que hay que leerlo aqui.
+        final boolean[] loadingDurante = {false};
         doAnswer(invocation -> {
+            loadingDurante[0] = viewModel.getIsLoading().getValue();
             TaskRepository.OnAnalyticsLoadedCallback cb = invocation.getArgument(1);
             cb.onLoaded(new AnalyticsData());
             return null;
         }).when(repository).loadAnalytics(anyInt(), any());
 
-        assertEquals(false, viewModel.getIsLoading().getValue());
-
+        assertEquals(false, viewModel.getIsLoading().getValue()); // antes: apagado
         viewModel.loadAnalytics(0);
-        assertEquals(true, viewModel.getIsLoading().getValue());
-
-        Thread.sleep(100);
-        assertEquals(false, viewModel.getIsLoading().getValue());
+        assertTrue(loadingDurante[0]);                            // durante: encendido
+        assertEquals(false, viewModel.getIsLoading().getValue()); // despues: apagado
     }
 
     @Test
